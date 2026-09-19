@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# SQLite databases and auxiliary files
+*.sqlite
+*.sqlite-*
+
+# Uploaded files
+storage/uploads/*
+!storage/uploads/.gitkeep

@@ -1,0 +1,26 @@
+info:
+  name: Rename file
+  type: http
+  seq: 2
+
+http:
+  method: PATCH
+  url: "{{url}}/files/:id"
+  params:
+    - name: id
+      value: "1"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "name": "New file name"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

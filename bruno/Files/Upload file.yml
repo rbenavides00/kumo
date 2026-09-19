@@ -1,0 +1,28 @@
+info:
+  name: Upload file
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{url}}/files/upload"
+  body:
+    type: multipart-form
+    data:
+      - name: file
+        type: file
+        value:
+          - /home/rober/Downloads/test.txt
+        contentType: text/plain; charset=utf-8
+      - name: folderId
+        type: text
+        value: "1"
+        disabled: true
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

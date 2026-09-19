@@ -1,0 +1,23 @@
+info:
+  name: Create folder
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{url}}/folders/"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "My first folder"
+      //   "parentId": "1"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
