@@ -1,11 +1,15 @@
+import { NavLink } from "react-router-dom";
 import { ArrowLeftToLine, ArrowRightToLine, X } from "lucide-react";
 
 import useDisclosure from "../../../hooks/useDisclosure";
 import SidebarBackdrop from "./SidebarBackdrop";
 import SidebarItem from "./SidebarItem";
+import Avatar from "../../ui/Avatar";
+import { useUser } from "../../../context/UserContext";
 
 function Sidebar({ items, title, isMobileOpen, onCloseMobile, onSignOut }) {
   const { isOpen: isExpanded, toggle: toggleExpanded } = useDisclosure(true);
+  const { user, avatarUrl, refreshUser } = useUser();
 
   // On mobile, the sidebar is always displayed expanded (with text)
   const showLabels = isExpanded || isMobileOpen;
@@ -38,7 +42,10 @@ function Sidebar({ items, title, isMobileOpen, onCloseMobile, onSignOut }) {
           ))}
         </nav>
 
-        <SidebarAccount isExpanded={showLabels} onSignOut={onSignOut} />
+        <SidebarAccount
+          isExpanded={showLabels}
+          onSignOut={onSignOut}
+        />
       </aside>
     </>
   );
@@ -46,7 +53,9 @@ function Sidebar({ items, title, isMobileOpen, onCloseMobile, onSignOut }) {
 
 function SidebarHeader({ title, isExpanded, onToggleExpanded, onCloseMobile }) {
   return (
-    <div className={`flex h-16 px-4 items-center ${isExpanded ? "justify-between" : "justify-center"}`}>
+    <div
+      className={`flex h-16 px-4 items-center ${isExpanded ? "justify-between" : "justify-center"}`}
+    >
       {isExpanded && (
         <span className="text-lg font-semibold whitespace-nowrap text-gray-800">
           {title}
@@ -79,22 +88,25 @@ function SidebarHeader({ title, isExpanded, onToggleExpanded, onCloseMobile }) {
 }
 
 function SidebarAccount({ isExpanded, onSignOut }) {
+  const { user, avatarUrl } = useUser();
+
   return (
     <div className="mt-auto p-3">
       <div
         className={`flex items-center ${isExpanded ? "justify-between" : "justify-center"}`}
       >
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg"
-          alt="Profile"
-          className="h-9 w-9 rounded-full object-cover"
-        />
+        <NavLink
+          to="/profile"
+          className="group flex rounded-full p-0.5 transition-all duration-200 hover:bg-gray-500/20 hover:ring-2 hover:ring-gray-300/50"
+        >
+          <Avatar user={user} avatarUrl={avatarUrl} size="sm" />
+        </NavLink>
 
         {isExpanded && (
           <button
             type="button"
             onClick={onSignOut}
-            className="text-sm whitespace-nowrap text-gray-500 hover:text-gray-900"
+            className="cursor-pointer text-sm whitespace-nowrap text-gray-500 hover:text-gray-900"
           >
             Sign out
           </button>

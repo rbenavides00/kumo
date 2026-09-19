@@ -1,6 +1,5 @@
 import Card from "../components/ui/Card";
 
-// TODO: Change title by NAV_ITEMS constant
 function HomePage() {
   return (
     <Card>

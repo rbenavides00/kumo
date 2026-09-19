@@ -1,25 +1,11 @@
 const express = require("express");
-const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const db = require("../db");
 const authMiddleware = require("../middleware/auth");
+const filesUpload = require("../middleware/storage/fileStorage");
 
 const router = express.Router();
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const userDir = path.join("./storage/uploads", String(req.user.id));
-    fs.mkdirSync(userDir, { recursive: true });
-    cb(null, userDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${file.originalname}`;
-    cb(null, uniqueName);
-  },
-});
-
-const upload = multer({ storage });
 
 function splitFileName(originalname) {
   const ext = path.extname(originalname);
@@ -32,54 +18,59 @@ function toFullName(file) {
   return file.extension ? `${file.name}.${file.extension}` : file.name;
 }
 
-router.post("/upload", authMiddleware, upload.single("file"), (req, res) => {
-  const { originalname, filename, size } = req.file;
-  const folderId = req.body.folderId || null;
-  const { name, extension } = splitFileName(originalname);
+router.post(
+  "/upload",
+  authMiddleware,
+  filesUpload.single("file"),
+  (req, res) => {
+    const { originalname, filename, size } = req.file;
+    const folderId = req.body.folderId || null;
+    const { name, extension } = splitFileName(originalname);
 
-  if (folderId) {
-    const folder = db
-      .prepare("SELECT * FROM folders WHERE id = ? AND owner_id = ?")
-      .get(folderId, req.user.id);
-    if (!folder) {
-      return res.status(404).json({ error: "Destination folder not found" });
+    if (folderId) {
+      const folder = db
+        .prepare("SELECT * FROM folders WHERE id = ? AND owner_id = ?")
+        .get(folderId, req.user.id);
+      if (!folder) {
+        return res.status(404).json({ error: "Destination folder not found" });
+      }
     }
-  }
 
-  const duplicate = db
-    .prepare(
-      `
+    const duplicate = db
+      .prepare(
+        `
         SELECT id FROM files
         WHERE owner_id = ? AND folder_id IS ? AND name = ? AND extension = ?
       `,
-    )
-    .get(req.user.id, folderId, name, extension);
+      )
+      .get(req.user.id, folderId, name, extension);
 
-  if (duplicate) {
-    return res
-      .status(409)
-      .json({ error: "A file with that name already exists here" });
-  }
+    if (duplicate) {
+      return res
+        .status(409)
+        .json({ error: "A file with that name already exists here" });
+    }
 
-  const result = db
-    .prepare(
-      `
+    const result = db
+      .prepare(
+        `
       INSERT INTO files (owner_id, folder_id, name, extension, stored_name, size)
       VALUES (?, ?, ?, ?, ?, ?)
     `,
-    )
-    .run(req.user.id, folderId, name, extension, filename, size);
+      )
+      .run(req.user.id, folderId, name, extension, filename, size);
 
-  const file = {
-    id: result.lastInsertRowid,
-    name,
-    extension,
-    folder_id: folderId,
-    size,
-  };
+    const file = {
+      id: result.lastInsertRowid,
+      name,
+      extension,
+      folder_id: folderId,
+      size,
+    };
 
-  res.status(201).json({ ...file, original_name: toFullName(file) });
-});
+    res.status(201).json({ ...file, original_name: toFullName(file) });
+  },
+);
 
 // Rename a file (extension is preserved and can't be changed)
 router.patch("/:id", authMiddleware, (req, res) => {

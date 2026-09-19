@@ -11,5 +11,4 @@ node_modules/
 *.sqlite-*
 
 # Uploaded files
-backend/storage/uploads/*
-!backend/storage/uploads/.gitkeep
+backend/storage/

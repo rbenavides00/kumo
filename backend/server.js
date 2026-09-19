@@ -15,6 +15,7 @@ app.get("/ping", (req, res) => {
 app.use("/auth", require("./src/routes/auth"));
 app.use("/files", require("./src/routes/files"));
 app.use("/folders", require("./src/routes/folders"));
+app.use("/users", require("./src/routes/users"));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

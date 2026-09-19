@@ -13,6 +13,12 @@ router.post("/register", async (req, res) => {
     return res.status(400).json({ error: "Username or password are missing" });
   }
 
+  if (password.length < 8) {
+    return res
+      .status(400)
+      .json({ error: "Password must be at least 8 characters" });
+  }
+
   const existingUser = db
     .prepare("SELECT id FROM users WHERE username = ?")
     .get(username);
@@ -28,7 +34,7 @@ router.post("/register", async (req, res) => {
     passwordHash,
   );
 
-  return res.status(201).json({ message: "Usuario creado" });
+  return res.status(201).json({ message: "User created" });
 });
 
 // Login

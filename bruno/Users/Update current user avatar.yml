@@ -1,0 +1,24 @@
+info:
+  name: Update current user avatar
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{url}}/users/me/avatar"
+  body:
+    type: multipart-form
+    data:
+      - name: avatar
+        type: file
+        value:
+          - /home/rober/Downloads/avatar.jpeg
+        contentType: image/jpeg
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

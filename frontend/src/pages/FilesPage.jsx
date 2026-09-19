@@ -9,8 +9,6 @@ import FileListView from "../components/files/FileListView";
 import FileGridView from "../components/files/FileGridView";
 import EmptyState from "../components/files/EmptyState";
 
-// TODO: Change title by NAV_ITEMS constant
-// TODO: Create FilesPage component for My Files & Shared pages
 function FilesPage() {
   const [viewMode, setViewMode] = useState("list");
   const fileInputRef = useRef(null);
@@ -90,7 +88,7 @@ function FilesPage() {
 
   return (
     <Card>
-      <Card.Header title="My files" subtitle="Everything you've uploaded." />
+      <Card.Header title="Files" subtitle="Everything everyone has uploaded." />
 
       <Card.Body className="flex flex-col gap-4">
         <Breadcrumbs path={path} onNavigate={navigateToFolder} />

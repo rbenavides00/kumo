@@ -17,6 +17,9 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
+    first_name TEXT DEFAULT '',
+    last_name TEXT DEFAULT '',
+    avatar_path TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   );
 `);

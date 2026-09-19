@@ -1,17 +1,17 @@
 info:
-  name: Register
+  name: Update current user name
   type: http
-  seq: 3
+  seq: 2
 
 http:
-  method: POST
-  url: "{{url}}/auth/register"
+  method: PATCH
+  url: "{{url}}/users/me"
   body:
     type: json
     data: |-
       {
-        "username": "test",
-        "password": "12345678"
+        "firstName": "First name",
+        "lastName": "Last name"
       }
   auth: inherit
 
