@@ -13,6 +13,20 @@ function PasswordForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (isSubmitting) {
+      return;
+    }
+
+    if (!currentPassword || !newPassword) {
+      setError("Current and new password are required");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError("New password must be at least 8 characters");
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setError("New passwords do not match");
       return;

@@ -12,6 +12,14 @@ function ProfileForm({ initialFirstName, initialLastName, onUpdated }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (isSubmitting) {
+      return;
+    }
+
+    if (firstName === initialFirstName && lastName === initialLastName) {
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     setSuccessMessage(null);

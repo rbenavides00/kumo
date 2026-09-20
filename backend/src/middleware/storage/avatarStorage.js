@@ -1,15 +1,10 @@
 const multer = require("multer");
+const sharp = require("sharp");
 const path = require("path");
-const createDiskStorage = require("./createDiskStorage");
-
-const storage = createDiskStorage({
-  getDestination: () => "./storage/avatars",
-  getFilename: (req, file) =>
-    `${req.user.id}-${Date.now()}${path.extname(file.originalname)}`,
-});
+const fs = require("fs/promises");
 
 const avatarUpload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ["image/jpeg", "image/png", "image/webp"];
@@ -20,4 +15,34 @@ const avatarUpload = multer({
   },
 });
 
-module.exports = avatarUpload;
+async function processAvatar(req, res, next) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No image provided" });
+    }
+
+    const dir = "./storage/avatars";
+
+    await fs.mkdir(dir, { recursive: true });
+
+    const filename = `${req.user.id}-${Date.now()}.webp`;
+    const filepath = path.join(dir, filename);
+
+    await sharp(req.file.buffer)
+      .resize(500, 500, { fit: "cover", position: "center" })
+      .webp({ quality: 80,})
+      .toFile(filepath);
+
+    req.file.path = filepath;
+    req.file.filename = filename;
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = {
+  avatarUpload,
+  processAvatar,
+};

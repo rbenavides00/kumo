@@ -62,7 +62,7 @@ function SidebarHeader({ title, isExpanded, onToggleExpanded, onCloseMobile }) {
       <button
         type="button"
         onClick={onToggleExpanded}
-        className="hidden rounded-lg p-2 text-gray-600 hover:bg-gray-200 hover:text-gray-900 md:block"
+        className="hidden rounded-lg p-2 text-gray-600 hover:bg-gray-200 hover:text-gray-900 md:block cursor-pointer"
       >
         {isExpanded ? (
           <ArrowLeftToLine size={22} />

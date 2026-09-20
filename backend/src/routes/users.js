@@ -4,7 +4,10 @@ const path = require("path");
 const fs = require("fs");
 const db = require("../db");
 const authMiddleware = require("../middleware/auth");
-const avatarUpload = require("../middleware/storage/avatarStorage");
+const {
+  avatarUpload,
+  processAvatar,
+} = require("../middleware/storage/avatarStorage");
 
 const router = express.Router();
 
@@ -51,6 +54,7 @@ router.patch(
   "/me/avatar",
   authMiddleware,
   avatarUpload.single("avatar"),
+  processAvatar,
   (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "No image provided" });
