@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 
-import Sidebar from "../components/shell/sidebar/Sidebar";
+import { useAuth } from "../context/AuthContext";
 import MobileHeader from "../components/shell/MobileHeader";
+import Sidebar from "../components/shell/sidebar/Sidebar";
 import { NAV_ITEMS } from "../constants/navigation";
 
 const APP_TITLE = "KUMO";

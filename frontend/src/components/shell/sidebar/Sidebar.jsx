@@ -1,15 +1,14 @@
 import { NavLink } from "react-router-dom";
 import { ArrowLeftToLine, ArrowRightToLine, X } from "lucide-react";
 
+import { useUser } from "../../../context/UserContext";
 import useDisclosure from "../../../hooks/useDisclosure";
 import SidebarBackdrop from "./SidebarBackdrop";
 import SidebarItem from "./SidebarItem";
 import Avatar from "../../ui/Avatar";
-import { useUser } from "../../../context/UserContext";
 
 function Sidebar({ items, title, isMobileOpen, onCloseMobile, onSignOut }) {
   const { isOpen: isExpanded, toggle: toggleExpanded } = useDisclosure(true);
-  const { user, avatarUrl, refreshUser } = useUser();
 
   // On mobile, the sidebar is always displayed expanded (with text)
   const showLabels = isExpanded || isMobileOpen;
@@ -42,10 +41,7 @@ function Sidebar({ items, title, isMobileOpen, onCloseMobile, onSignOut }) {
           ))}
         </nav>
 
-        <SidebarAccount
-          isExpanded={showLabels}
-          onSignOut={onSignOut}
-        />
+        <SidebarAccount isExpanded={showLabels} onSignOut={onSignOut} />
       </aside>
     </>
   );

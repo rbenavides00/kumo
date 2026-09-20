@@ -1,6 +1,8 @@
 import Card from "../components/ui/Card";
+import usePageTitle from "../hooks/usePageTitle";
 
 function SettingsPage() {
+  usePageTitle("Settings");
   return (
     <Card>
       <Card.Header title="Settings" subtitle="Manage your preferences." />

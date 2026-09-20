@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import { useAuth } from "../../context/AuthContext";
+import usePageTitle from "../../hooks/usePageTitle";
 
 function LoginPage() {
+  usePageTitle("Login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);

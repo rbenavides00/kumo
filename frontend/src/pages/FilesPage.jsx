@@ -1,15 +1,16 @@
 import { useRef, useState } from "react";
 
 import useFiles from "../hooks/useFiles";
-
+import usePageTitle from "../hooks/usePageTitle";
 import Card from "../components/ui/Card";
 import Breadcrumbs from "../components/files/Breadcrumbs";
+import EmptyState from "../components/files/EmptyState";
 import FilesToolbar from "../components/files/FilesToolbar";
 import FileListView from "../components/files/FileListView";
 import FileGridView from "../components/files/FileGridView";
-import EmptyState from "../components/files/EmptyState";
 
 function FilesPage() {
+  usePageTitle("Files");
   const [viewMode, setViewMode] = useState("list");
   const fileInputRef = useRef(null);
 

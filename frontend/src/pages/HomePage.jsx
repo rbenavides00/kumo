@@ -1,6 +1,9 @@
 import Card from "../components/ui/Card";
+import usePageTitle from "../hooks/usePageTitle";
 
 function HomePage() {
+  usePageTitle("Home");
+
   return (
     <Card>
       <Card.Header

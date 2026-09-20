@@ -1,10 +1,12 @@
+import { useUser } from "../context/UserContext";
+import usePageTitle from "../hooks/usePageTitle";
 import Card from "../components/ui/Card";
 import AvatarUploader from "../components/profile/AvatarUploader";
 import ProfileForm from "../components/profile/ProfileForm";
 import PasswordForm from "../components/profile/PasswordForm";
-import { useUser } from "../context/UserContext";
 
 function ProfilePage() {
+  usePageTitle("Profile");
   const { user, avatarUrl, refreshUser } = useUser();
 
   if (!user) {
@@ -22,7 +24,11 @@ function ProfilePage() {
       <Card.Header title="Profile" subtitle="Manage your account settings." />
 
       <Card.Body className="flex flex-col gap-8">
-        <AvatarUploader user={user} avatarUrl={avatarUrl} onUpdated={refreshUser} />
+        <AvatarUploader
+          user={user}
+          avatarUrl={avatarUrl}
+          onUpdated={refreshUser}
+        />
 
         <ProfileForm
           initialFirstName={user.first_name}
