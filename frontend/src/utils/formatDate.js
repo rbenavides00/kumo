@@ -1,7 +1,10 @@
-// TODO: Formate date in DD/MMMM/YYYY HH:MM
-export function formatDateLong(dateString) {
+function parseSqliteDate(dateString) {
   // SQLite's CURRENT_TIMESTAMP has no "Z", so treat it as UTC explicitly
-  const date = new Date(`${dateString.replace(" ", "T")}Z`);
+  return new Date(`${dateString.replace(" ", "T")}Z`);
+}
+
+export function formatDateLong(dateString) {
+  const date = parseSqliteDate(dateString);
 
   return date.toLocaleString(undefined, {
     month: "short",
@@ -12,5 +15,12 @@ export function formatDateLong(dateString) {
   });
 }
 
-// TODO: Format date in DD/MM/YYYY
-export function formatDateShort(dateString) {}
+export function formatDateShort(dateString) {
+  const date = parseSqliteDate(dateString);
+
+  return date.toLocaleDateString('en-UK', {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}

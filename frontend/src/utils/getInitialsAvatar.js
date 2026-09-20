@@ -16,6 +16,7 @@ export function getInitials(firstName, lastName) {
   return (first + last).toUpperCase() || "?";
 }
 
+// TODO: Update functionality once UUIDs are implemented
 export function getAvatarColor(userId) {
   return COLORS[userId % COLORS.length];
 }

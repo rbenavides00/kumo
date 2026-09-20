@@ -37,7 +37,7 @@ function PasswordForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold text-gray-800">Change password</h2>
+      <h2 className="text-md font-semibold text-gray-800">Change password</h2>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">

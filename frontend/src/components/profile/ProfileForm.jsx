@@ -29,7 +29,7 @@ function ProfileForm({ initialFirstName, initialLastName, onUpdated }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold text-gray-800">
+      <h2 className="text-md font-semibold text-gray-800">
         Personal information
       </h2>
 

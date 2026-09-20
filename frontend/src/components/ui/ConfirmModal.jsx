@@ -18,6 +18,8 @@ function ConfirmModal({
     try {
       await onConfirm();
       onClose();
+    } catch {
+      // Keep the modal open. The caller handles the error.
     } finally {
       setIsSubmitting(false);
     }
