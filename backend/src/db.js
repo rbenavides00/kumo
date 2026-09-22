@@ -31,6 +31,7 @@ db.exec(`
     owner_id INTEGER NOT NULL,
     parent_id INTEGER,
     name TEXT NOT NULL,
+    is_public INTEGER DEFAULT 0,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (owner_id) REFERENCES users(id),
@@ -41,11 +42,7 @@ db.exec(`
 // Prevent duplicate folder names inside the same directory.
 db.exec(`
   CREATE UNIQUE INDEX IF NOT EXISTS idx_folders_unique_name
-  ON folders (
-    owner_id,
-    COALESCE(parent_id, 0),
-    name
-  );
+  ON folders (owner_id, COALESCE(parent_id, 0), name);
 `);
 
 // Files
@@ -69,26 +66,44 @@ db.exec(`
 // Prevent duplicate file names (name + extension) inside the same directory.
 db.exec(`
   CREATE UNIQUE INDEX IF NOT EXISTS idx_files_unique_name
-  ON files (
-    owner_id,
-    COALESCE(folder_id, 0),
-    name,
-    extension
-  );
+  ON files (owner_id, COALESCE(folder_id, 0), name, extension);
 `);
 
 // Shares
 db.exec(`
   CREATE TABLE IF NOT EXISTS shares (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    file_id INTEGER NOT NULL,
+    file_id INTEGER,
+    folder_id INTEGER,
     shared_with_user_id INTEGER NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (file_id) REFERENCES files(id),
+    FOREIGN KEY (folder_id) REFERENCES folders(id),
     FOREIGN KEY (shared_with_user_id) REFERENCES users(id),
-    UNIQUE(file_id, shared_with_user_id)
+    CHECK (
+      (file_id IS NOT NULL AND folder_id IS NULL) OR
+      (file_id IS NULL AND folder_id IS NOT NULL)
+    )
   );
+`);
+
+// File can only be shared once with the same user.
+db.exec(`
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_unique_file
+  ON shares (file_id, shared_with_user_id) WHERE file_id IS NOT NULL;
+`);
+
+// Folder can only be shared once with the same user.
+db.exec(`
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_shares_unique_folder
+  ON shares (folder_id, shared_with_user_id) WHERE folder_id IS NOT NULL;
+`);
+
+// Speed up queries that retrieve shares belonging to a specific user.
+db.exec(`
+  CREATE INDEX IF NOT EXISTS idx_shares_shared_with_user
+  ON shares (shared_with_user_id);
 `);
 
 module.exports = db;

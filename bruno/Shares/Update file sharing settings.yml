@@ -1,15 +1,22 @@
 info:
-  name: Download file
+  name: Update file sharing settings
   type: http
-  seq: 4
+  seq: 5
 
 http:
-  method: GET
-  url: "{{url}}/files/:id/download"
+  method: PATCH
+  url: "{{url}}/shares/file/:id"
   params:
     - name: id
       value: "1"
       type: path
+  body:
+    type: json
+    data: |-
+      {
+        "isPublic": true,
+        "sharedWith": []
+      }
   auth: inherit
 
 settings:

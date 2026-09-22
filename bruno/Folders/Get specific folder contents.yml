@@ -5,9 +5,9 @@ info:
 
 http:
   method: GET
-  url: "{{url}}/folders/:folderID/contents"
+  url: "{{url}}/folders/:id/contents"
   params:
-    - name: folderID
+    - name: id
       value: "1"
       type: path
   auth: inherit

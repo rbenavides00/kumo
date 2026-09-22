@@ -4,6 +4,7 @@ const fs = require("fs");
 const db = require("../db");
 const authMiddleware = require("../middleware/auth");
 const filesUpload = require("../middleware/storage/fileStorage");
+const access = require("../utils/access");
 
 const router = express.Router();
 
@@ -18,6 +19,8 @@ function toFullName(file) {
   return file.extension ? `${file.name}.${file.extension}` : file.name;
 }
 
+// Uploads a file to the user's root folder or a folder they own.
+// Prevents duplicate file names within the same folder.
 router.post(
   "/upload",
   authMiddleware,
@@ -39,9 +42,9 @@ router.post(
     const duplicate = db
       .prepare(
         `
-        SELECT id FROM files
-        WHERE owner_id = ? AND folder_id IS ? AND name = ? AND extension = ?
-      `,
+          SELECT id FROM files
+          WHERE owner_id = ? AND folder_id IS ? AND name = ? AND extension = ?
+        `,
       )
       .get(req.user.id, folderId, name, extension);
 
@@ -54,9 +57,9 @@ router.post(
     const result = db
       .prepare(
         `
-      INSERT INTO files (owner_id, folder_id, name, extension, stored_name, size)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `,
+          INSERT INTO files (owner_id, folder_id, name, extension, stored_name, size)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `,
       )
       .run(req.user.id, folderId, name, extension, filename, size);
 
@@ -72,7 +75,7 @@ router.post(
   },
 );
 
-// Rename a file (extension is preserved and can't be changed)
+// Renames an owned file while preserving its extension.
 router.patch("/:id", authMiddleware, (req, res) => {
   const { name } = req.body;
   const trimmedName = name?.trim();
@@ -112,7 +115,7 @@ router.patch("/:id", authMiddleware, (req, res) => {
   res.json({ message: "File has been renamed" });
 });
 
-// Delete file
+// Deletes an owned file from the database and local storage.
 router.delete("/:id", authMiddleware, (req, res) => {
   const file = db
     .prepare("SELECT * FROM files WHERE id = ? AND owner_id = ?")
@@ -139,19 +142,23 @@ router.delete("/:id", authMiddleware, (req, res) => {
   res.json({ message: "File has been deleted" });
 });
 
-// Download file
+// Downloads a file when the user has read access through ownership,
+// public visibility, direct sharing, or an accessible parent folder.
 router.get("/:id/download", authMiddleware, (req, res) => {
-  const file = db
-    .prepare("SELECT * FROM files WHERE id = ? AND owner_id = ?")
-    .get(req.params.id, req.user.id);
+  const file = access.getFileById(req.params.id);
 
   if (!file) {
     return res.status(404).json({ error: "File not found" });
   }
 
+  const { canRead, ownerId } = access.getFileAccess(file, req.user.id);
+  if (!canRead) {
+    return res.status(404).json({ error: "File not found" });
+  }
+
   const filePath = path.join(
     "./storage/uploads",
-    String(req.user.id),
+    String(ownerId),
     file.stored_name,
   );
 
