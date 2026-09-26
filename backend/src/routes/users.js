@@ -110,4 +110,39 @@ router.patch("/me/password", authMiddleware, async (req, res) => {
   res.json({ message: "Password updated" });
 });
 
+// Public profile info of any user
+router.get("/:id", authMiddleware, (req, res) => {
+  const user = db
+    .prepare(
+      `
+        SELECT id, username, first_name, last_name, avatar_path
+        FROM users WHERE id = ?
+      `,
+    )
+    .get(req.params.id);
+
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  res.json({
+    id: user.id,
+    username: user.username,
+    firstName: user.first_name,
+    lastName: user.last_name,
+    hasAvatar: Boolean(user.avatar_path),
+  });
+});
+
+// Avatar of any user
+router.get("/:id/avatar", authMiddleware, (req, res) => {
+  const user = db
+    .prepare("SELECT avatar_path FROM users WHERE id = ?")
+    .get(req.params.id);
+
+  if (!user?.avatar_path || !fs.existsSync(user.avatar_path)) {
+    return res.status(404).json({ error: "No avatar set" });
+  }
+
+  res.sendFile(path.resolve(user.avatar_path));
+});
+
 module.exports = router;

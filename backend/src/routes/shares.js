@@ -6,31 +6,6 @@ const shares = require("../utils/shares");
 
 const router = express.Router();
 
-// Items shared directly with the current user (not inherited from a parent)
-router.get("/shared-with-me", authMiddleware, (req, res) => {
-  const folders = db
-    .prepare(
-      `
-        SELECT folders.* FROM folders
-        JOIN shares ON shares.folder_id = folders.id
-        WHERE shares.shared_with_user_id = ?
-      `,
-    )
-    .all(req.user.id);
-
-  const files = db
-    .prepare(
-      `
-        SELECT files.* FROM files
-        JOIN shares ON shares.file_id = files.id
-        WHERE shares.shared_with_user_id = ?
-      `,
-    )
-    .all(req.user.id);
-
-  res.json({ folders, files });
-});
-
 // Ensures the folder exists and belongs to the authenticated user.
 function requireOwnedFolder(req, res) {
   const folder = access.getFolderById(req.params.id);

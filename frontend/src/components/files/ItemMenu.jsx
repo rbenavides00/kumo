@@ -5,12 +5,21 @@ import PromptModal from "../ui/PromptModal";
 import ConfirmModal from "../ui/ConfirmModal";
 
 // TODO: Change position if menu is too low on the screen
-function ItemMenu({ name, extension, onRename, onDelete, onDownload }) {
+function ItemMenu({
+  name,
+  extension,
+  canEdit = true,
+  onRename,
+  onDelete,
+  onDownload,
+}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const fullName = extension ? `${name}.${extension}` : name;
+
+  if (!canEdit && !onDownload) return null;
 
   return (
     <div className="relative text-center">
@@ -47,61 +56,68 @@ function ItemMenu({ name, extension, onRename, onDelete, onDownload }) {
               </button>
             )}
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsMenuOpen(false);
-                setIsRenameModalOpen(true);
-              }}
-              className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100"
-            >
-              <Pencil size={14} />
-              Rename
-            </button>
+            {canEdit && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMenuOpen(false);
+                    setIsRenameModalOpen(true);
+                  }}
+                  className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100"
+                >
+                  <Pencil size={14} />
+                  Rename
+                </button>
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsMenuOpen(false);
-                setIsDeleteModalOpen(true);
-              }}
-              className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50"
-            >
-              <Trash2 size={14} />
-              Delete
-            </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMenuOpen(false);
+                    setIsDeleteModalOpen(true);
+                  }}
+                  className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50"
+                >
+                  <Trash2 size={14} />
+                  Delete
+                </button>
+              </>
+            )}
           </div>
         </>
       )}
 
-      <PromptModal
-        isOpen={isRenameModalOpen}
-        onClose={() => setIsRenameModalOpen(false)}
-        onSubmit={onRename}
-        title="Rename item"
-        placeholder="New name"
-        initialValue={name}
-        suffix={extension ? `.${extension}` : undefined}
-        submitLabel="Rename"
-        validate={(value) => (!value ? "Item name is required" : null)}
-      />
-
-      <ConfirmModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={onDelete}
-        title="Delete"
-        message={
-          <>
-            Are you sure you want to delete <strong>{fullName}</strong>? This
-            can't be undone.
-          </>
-        }
-        confirmLabel="Delete"
-        isDestructive
-      />
+      {canEdit && (
+        <>
+          <PromptModal
+            isOpen={isRenameModalOpen}
+            onClose={() => setIsRenameModalOpen(false)}
+            onSubmit={onRename}
+            title="Rename item"
+            placeholder="New name"
+            initialValue={name}
+            suffix={extension ? `.${extension}` : undefined}
+            submitLabel="Rename"
+            validate={(value) => (!value ? "Item name is required" : null)}
+          />
+          <ConfirmModal
+            isOpen={isDeleteModalOpen}
+            onClose={() => setIsDeleteModalOpen(false)}
+            onConfirm={onDelete}
+            title="Delete"
+            message={
+              <>
+                Are you sure you want to delete <strong>{fullName}</strong>?
+                This can't be undone.
+              </>
+            }
+            confirmLabel="Delete"
+            isDestructive
+          />
+        </>
+      )}
     </div>
   );
 }

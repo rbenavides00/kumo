@@ -9,7 +9,7 @@ function Breadcrumbs({ path, onNavigate }) {
         className="flex items-center gap-1 rounded px-1.5 py-1 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer"
       >
         <Home size={14} />
-        <span>My files</span>
+        <span>Home</span>
       </button>
 
       {path.map((folder) => (

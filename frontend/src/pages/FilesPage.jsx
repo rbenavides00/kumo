@@ -15,6 +15,8 @@ function FilesPage() {
   const fileInputRef = useRef(null);
 
   const {
+    // State
+    filter,
     path,
     folders,
     files,
@@ -22,17 +24,15 @@ function FilesPage() {
     isUploading,
     error,
     isEmpty,
-
+    setFilter,
     openFolderById,
     navigateToFolder,
-
     createFolder,
     renameFolder,
     deleteFolder,
-
+    uploadFile,
     renameFile,
     deleteFile,
-    uploadFile,
     downloadFile,
   } = useFiles();
 
@@ -61,6 +61,7 @@ function FilesPage() {
     if (viewMode === "list") {
       return (
         <FileListView
+          filter={filter}
           folders={folders}
           files={files}
           onOpenFolder={openFolderById}
@@ -75,6 +76,7 @@ function FilesPage() {
 
     return (
       <FileGridView
+        filter={filter}
         folders={folders}
         files={files}
         onOpenFolder={openFolderById}
@@ -97,6 +99,8 @@ function FilesPage() {
         <FilesToolbar
           viewMode={viewMode}
           onChangeViewMode={setViewMode}
+          filter={filter}
+          onChangeFilter={setFilter}
           onUploadClick={handleUploadClick}
           onCreateFolder={createFolder}
           isUploading={isUploading}

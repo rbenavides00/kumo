@@ -3,6 +3,8 @@ import * as foldersApi from "../api/folders";
 import * as filesApi from "../api/files";
 
 function useFiles() {
+  // State
+  const [filter, setFilterState] = useState("myFiles");
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [path, setPath] = useState([]);
   const [folders, setFolders] = useState([]);
@@ -11,12 +13,13 @@ function useFiles() {
   const [error, setError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const loadContents = async (folderId) => {
+  // Data loading
+  const loadContents = async (folderId, activeFilter = filter) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const data = await foldersApi.getContents(folderId);
+      const data = await foldersApi.getContents(folderId, activeFilter);
 
       setFolders(data.folders);
       setFiles(data.files);
@@ -28,9 +31,20 @@ function useFiles() {
   };
 
   useEffect(() => {
-    loadContents(currentFolderId);
-  }, [currentFolderId]);
+    loadContents(currentFolderId, filter);
+  }, [currentFolderId, filter]);
 
+  const isEmpty = !isLoading && folders.length === 0 && files.length === 0;
+
+  const setFilter = (newFilter) => {
+    setPath([]);
+    setCurrentFolderId(null);
+    setFolders([]);
+    setFiles([]);
+    setFilterState(newFilter);
+  };
+
+  // Navigation
   const openFolder = (folder) => {
     setPath((prevPath) => [...prevPath, { id: folder.id, name: folder.name }]);
 
@@ -58,6 +72,7 @@ function useFiles() {
     setCurrentFolderId(folderId);
   };
 
+  // Folder actions
   const createFolder = async (name) => {
     await foldersApi.createFolder(name, currentFolderId);
     await loadContents(currentFolderId);
@@ -77,6 +92,7 @@ function useFiles() {
     }
   };
 
+  // File actions
   const uploadFile = async (file) => {
     setIsUploading(true);
     setError(null);
@@ -113,9 +129,9 @@ function useFiles() {
     }
   };
 
-  const isEmpty = !isLoading && folders.length === 0 && files.length === 0;
-
   return {
+    // State
+    filter,
     currentFolderId,
     path,
     folders,
@@ -125,16 +141,20 @@ function useFiles() {
     error,
     isEmpty,
 
+    // Navigation
+    setFilter,
     openFolderById,
     navigateToFolder,
 
+    // Folder actions
     createFolder,
     renameFolder,
     deleteFolder,
 
+    // File actions
+    uploadFile,
     renameFile,
     deleteFile,
-    uploadFile,
     downloadFile,
   };
 }

@@ -15,10 +15,20 @@ export function formatDateLong(dateString) {
   });
 }
 
+export function formatDateMedium(dateString) {
+  const date = parseSqliteDate(dateString);
+
+  return date.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
 export function formatDateShort(dateString) {
   const date = parseSqliteDate(dateString);
 
-  return date.toLocaleDateString('en-UK', {
+  return date.toLocaleDateString("en-UK", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

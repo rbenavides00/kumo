@@ -1,13 +1,15 @@
 import { Folder } from "lucide-react";
 
 import { formatBytes } from "../../utils/formatBytes";
-import { formatDateLong } from "../../utils/formatDate";
+import { formatDateLong, formatDateMedium } from "../../utils/formatDate";
 import { formatFileName } from "../../utils/formatFileName";
 import { getFileIcon } from "../../utils/getFileIcon";
 
 import ItemMenu from "./ItemMenu";
+import UploaderAvatar from "./UploaderAvatar";
 
 function FileListView({
+  filter,
   folders,
   files,
   onOpenFolder,
@@ -17,6 +19,9 @@ function FileListView({
   onDeleteFile,
   onDownloadFile,
 }) {
+  const canEdit = filter === "myFiles";
+  const showUploader = filter === "sharedWithMe";
+
   return (
     <div className="rounded-xl border border-gray-200">
       <table className="w-full table-fixed">
@@ -26,7 +31,13 @@ function FileListView({
               Name
             </th>
 
-            <th className="w-20 px-3 py-2 text-left text-xs font-medium text-gray-500 sm:w-48 sm:px-4">
+            {showUploader && (
+              <th className="w-20 px-3 py-2 text-center text-xs font-medium text-gray-500 sm:w-24 sm:px-4">
+                Author
+              </th>
+            )}
+
+            <th className="w-20 px-3 py-2 text-left text-xs font-medium text-gray-500 sm:w-30 sm:px-4">
               Date
             </th>
 
@@ -53,8 +64,14 @@ function FileListView({
                 </button>
               </td>
 
+              {showUploader && (
+                <td className="px-3 py-2 text-center sm:px-4">
+                  <UploaderAvatar owner={folder.owner} />
+                </td>
+              )}
+
               <td className="px-3 py-3 text-left text-sm text-gray-400 sm:px-4">
-                {formatDateLong(folder.created_at)}
+                {formatDateMedium(folder.created_at)}
               </td>
 
               <td className="px-3 py-2 text-right text-sm text-gray-400 sm:px-4">
@@ -63,7 +80,8 @@ function FileListView({
 
               <td className="px-2 py-2 sm:px-4">
                 <ItemMenu
-                  itemName={folder.name}
+                  name={folder.name}
+                  canEdit={canEdit}
                   onRename={(name) => onRenameFolder(folder.id, name)}
                   onDelete={() => onDeleteFolder(folder.id)}
                 />
@@ -81,15 +99,19 @@ function FileListView({
                     <FileIcon size={18} className="shrink-0 text-gray-400" />
 
                     <span className="min-w-0 truncate">
-                      {file.extension
-                        ? `${file.name}.${file.extension}`
-                        : file.name}
+                      {formatFileName(file.name, file.extension)}
                     </span>
                   </span>
                 </td>
 
+                {showUploader && (
+                  <td className="px-3 py-3 text-center sm:px-4">
+                    <UploaderAvatar owner={file.owner} />
+                  </td>
+                )}
+
                 <td className="px-3 py-3 text-left text-sm text-gray-400 sm:px-4">
-                  {formatDateLong(file.uploaded_at)}
+                  {formatDateMedium(file.uploaded_at)}
                 </td>
 
                 <td className="px-3 py-3 text-right text-sm text-gray-400 sm:px-4">
@@ -100,6 +122,7 @@ function FileListView({
                   <ItemMenu
                     name={file.name}
                     extension={file.extension}
+                    canEdit={canEdit}
                     onRename={(name) => onRenameFile(file.id, name)}
                     onDelete={() => onDeleteFile(file.id)}
                     onDownload={() =>
