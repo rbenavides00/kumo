@@ -1,7 +1,7 @@
 import { Folder } from "lucide-react";
 
 import { formatBytes } from "../../utils/formatBytes";
-import { formatDateLong, formatDateMedium } from "../../utils/formatDate";
+import { formatDateMedium } from "../../utils/formatDate";
 import { formatFileName } from "../../utils/formatFileName";
 import { getFileIcon } from "../../utils/getFileIcon";
 
@@ -41,10 +41,6 @@ function FileListView({
               Date
             </th>
 
-            <th className="w-20 px-3 py-2 text-right text-xs font-medium text-gray-500 sm:w-24 sm:px-4">
-              Size
-            </th>
-
             <th className="rounded-tr-xl w-10 sm:w-12" />
           </tr>
         </thead>
@@ -56,11 +52,15 @@ function FileListView({
                 <button
                   type="button"
                   onClick={() => onOpenFolder(folder.id)}
-                  className="flex min-w-0 w-full items-center gap-2 text-left text-sm text-gray-800 sm:gap-3"
+                  className="flex min-w-0 w-full items-center gap-2 text-left text-sm text-gray-800 sm:gap-3 cursor-pointer"
                 >
-                  <Folder size={18} className="shrink-0 text-gray-400" />
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100">
+                    <Folder size={18} className="shrink-0 text-gray-800" />
+                  </span>
 
-                  <span className="min-w-0 truncate">{folder.name}</span>
+                  <span className="min-w-0 truncate font-medium">
+                    {folder.name}
+                  </span>
                 </button>
               </td>
 
@@ -72,10 +72,6 @@ function FileListView({
 
               <td className="px-3 py-3 text-left text-sm text-gray-400 sm:px-4">
                 {formatDateMedium(folder.created_at)}
-              </td>
-
-              <td className="px-3 py-2 text-right text-sm text-gray-400 sm:px-4">
-                —
               </td>
 
               <td className="px-2 py-2 sm:px-4">
@@ -95,11 +91,24 @@ function FileListView({
             return (
               <tr key={`file-${file.id}`}>
                 <td className="min-w-0 px-3 py-3 sm:px-4">
-                  <span className="flex min-w-0 items-center gap-2 text-sm text-gray-800 sm:gap-3">
-                    <FileIcon size={18} className="shrink-0 text-gray-400" />
+                  <span className="flex min-w-0 items-center gap-2 sm:gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100">
+                      <FileIcon size={18} className="text-gray-800" />
+                    </span>
 
-                    <span className="min-w-0 truncate">
-                      {formatFileName(file.name, file.extension)}
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium text-gray-800">
+                        {file.name}
+                      </span>
+                      <span className="block text-sm text-gray-400">
+                        {formatBytes(file.size)}
+                        {file.extension && (
+                          <>
+                            <span className="mx-2">|</span>
+                            {file.extension}
+                          </>
+                        )}
+                      </span>
                     </span>
                   </span>
                 </td>
@@ -112,10 +121,6 @@ function FileListView({
 
                 <td className="px-3 py-3 text-left text-sm text-gray-400 sm:px-4">
                   {formatDateMedium(file.uploaded_at)}
-                </td>
-
-                <td className="px-3 py-3 text-right text-sm text-gray-400 sm:px-4">
-                  {formatBytes(file.size)}
                 </td>
 
                 <td className="px-2 py-2 sm:px-4">

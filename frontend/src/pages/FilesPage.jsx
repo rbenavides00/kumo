@@ -8,6 +8,8 @@ import EmptyState from "../components/files/EmptyState";
 import FilesToolbar from "../components/files/FilesToolbar";
 import FileListView from "../components/files/FileListView";
 import FileGridView from "../components/files/FileGridView";
+import FileListSkeleton from "../components/files/skeletons/FileListSkeleton";
+import FileGridSkeleton from "../components/files/skeletons/FileGridSkeleton";
 
 function FilesPage() {
   usePageTitle("Files");
@@ -51,7 +53,7 @@ function FilesPage() {
 
   const renderContent = () => {
     if (isLoading) {
-      return <p className="text-sm text-gray-500">Loading files...</p>;
+      return viewMode === "list" ? <FileListSkeleton /> : <FileGridSkeleton />;
     }
 
     if (isEmpty) {

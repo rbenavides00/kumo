@@ -24,7 +24,7 @@ describe("useFiles", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      expect(foldersApi.getContents).toHaveBeenCalledWith(null);
+      expect(foldersApi.getContents).toHaveBeenCalledWith(null, "myFiles");
       expect(result.current.isEmpty).toBe(true);
       expect(result.current.error).toBeNull();
     });
@@ -55,6 +55,40 @@ describe("useFiles", () => {
     });
   });
 
+  describe("filter", () => {
+    it("does nothing when setting the current filter", async () => {
+      const { result } = renderHook(() => useFiles());
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      foldersApi.getContents.mockClear();
+
+      act(() => result.current.setFilter("myFiles"));
+
+      expect(result.current.filter).toBe("myFiles");
+      expect(foldersApi.getContents).not.toHaveBeenCalled();
+    });
+
+    it("changes the filter and reloads root contents", async () => {
+      const { result } = renderHook(() => useFiles());
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      act(() => result.current.setFilter("sharedWithMe"));
+
+      await waitFor(() =>
+        expect(foldersApi.getContents).toHaveBeenLastCalledWith(
+          null,
+          "sharedWithMe",
+        ),
+      );
+
+      expect(result.current.filter).toBe("sharedWithMe");
+      expect(result.current.currentFolderId).toBeNull();
+      expect(result.current.path).toEqual([]);
+    });
+  });
+
   describe("navigation", () => {
     it("openFolderById opens a folder that exists in the current listing", async () => {
       foldersApi.getContents.mockResolvedValue({
@@ -63,17 +97,20 @@ describe("useFiles", () => {
       });
 
       const { result } = renderHook(() => useFiles());
+
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       act(() => result.current.openFolderById(1));
 
       await waitFor(() => expect(result.current.currentFolderId).toBe(1));
+
       expect(result.current.path).toEqual([{ id: 1, name: "Docs" }]);
-      expect(foldersApi.getContents).toHaveBeenLastCalledWith(1);
+      expect(foldersApi.getContents).toHaveBeenLastCalledWith(1, "myFiles");
     });
 
     it("openFolderById does nothing if the folder id is not in the current listing", async () => {
       const { result } = renderHook(() => useFiles());
+
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       act(() => result.current.openFolderById(999));
@@ -89,6 +126,7 @@ describe("useFiles", () => {
       });
 
       const { result } = renderHook(() => useFiles());
+
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       act(() => result.current.openFolderById(1));
@@ -101,26 +139,23 @@ describe("useFiles", () => {
     });
 
     it("navigateToFolder trims the path to the selected breadcrumb", async () => {
-      foldersApi.getContents.mockResolvedValueOnce({
-        folders: [{ id: 1, name: "Docs" }],
-        files: [],
-      }); // mount call (root)
+      foldersApi.getContents
+        .mockResolvedValueOnce({
+          folders: [{ id: 1, name: "Docs" }],
+          files: [],
+        })
+        .mockResolvedValueOnce({
+          folders: [{ id: 2, name: "Reports" }],
+          files: [],
+        })
+        .mockResolvedValueOnce(emptyContents);
 
       const { result } = renderHook(() => useFiles());
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      foldersApi.getContents.mockResolvedValueOnce({
-        folders: [{ id: 2, name: "Reports" }],
-        files: [],
-      }); // call after opening folder 1
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       act(() => result.current.openFolderById(1));
       await waitFor(() => expect(result.current.currentFolderId).toBe(1));
-
-      foldersApi.getContents.mockResolvedValueOnce({
-        folders: [],
-        files: [],
-      }); // call after opening folder 2
 
       act(() => result.current.openFolderById(2));
       await waitFor(() => expect(result.current.currentFolderId).toBe(2));
@@ -130,7 +165,6 @@ describe("useFiles", () => {
         { id: 2, name: "Reports" },
       ]);
 
-      // Now jump back to the first breadcrumb
       act(() => result.current.navigateToFolder(1));
 
       expect(result.current.currentFolderId).toBe(1);
@@ -143,34 +177,40 @@ describe("useFiles", () => {
       foldersApi.createFolder.mockResolvedValue({});
 
       const { result } = renderHook(() => useFiles());
+
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       await act(() => result.current.createFolder("New Folder"));
 
       expect(foldersApi.createFolder).toHaveBeenCalledWith("New Folder", null);
-      expect(foldersApi.getContents).toHaveBeenCalledTimes(2); // mount + reload
+      expect(foldersApi.getContents).toHaveBeenCalledTimes(2);
+      expect(foldersApi.getContents).toHaveBeenLastCalledWith(null, "myFiles");
     });
 
     it("renameFolder calls the API and reloads contents", async () => {
       foldersApi.renameFolder.mockResolvedValue({});
 
       const { result } = renderHook(() => useFiles());
+
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       await act(() => result.current.renameFolder(1, "Renamed"));
 
       expect(foldersApi.renameFolder).toHaveBeenCalledWith(1, "Renamed");
+      expect(foldersApi.getContents).toHaveBeenLastCalledWith(null, "myFiles");
     });
 
     it("deleteFolder calls the API and reloads contents on success", async () => {
       foldersApi.deleteFolder.mockResolvedValue({});
 
       const { result } = renderHook(() => useFiles());
+
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       await act(() => result.current.deleteFolder(1));
 
       expect(foldersApi.deleteFolder).toHaveBeenCalledWith(1);
+      expect(foldersApi.getContents).toHaveBeenLastCalledWith(null, "myFiles");
       expect(result.current.error).toBeNull();
     });
 
@@ -180,6 +220,7 @@ describe("useFiles", () => {
       });
 
       const { result } = renderHook(() => useFiles());
+
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       await act(() => result.current.deleteFolder(1));
@@ -191,6 +232,7 @@ describe("useFiles", () => {
       foldersApi.deleteFolder.mockRejectedValue(new Error("boom"));
 
       const { result } = renderHook(() => useFiles());
+
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       await act(() => result.current.deleteFolder(1));
@@ -202,6 +244,7 @@ describe("useFiles", () => {
   describe("file actions", () => {
     it("uploadFile sets isUploading during the request and reloads contents", async () => {
       let resolveUpload;
+
       filesApi.uploadFile.mockReturnValue(
         new Promise((resolve) => {
           resolveUpload = resolve;
@@ -209,10 +252,13 @@ describe("useFiles", () => {
       );
 
       const { result } = renderHook(() => useFiles());
+
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       const fakeFile = new File(["content"], "test.txt");
+
       let uploadPromise;
+
       act(() => {
         uploadPromise = result.current.uploadFile(fakeFile);
       });
@@ -224,12 +270,14 @@ describe("useFiles", () => {
 
       expect(result.current.isUploading).toBe(false);
       expect(filesApi.uploadFile).toHaveBeenCalledWith(fakeFile, null);
+      expect(foldersApi.getContents).toHaveBeenLastCalledWith(null, "myFiles");
     });
 
     it("uploadFile sets an error when the upload fails", async () => {
       filesApi.uploadFile.mockRejectedValue(new Error("boom"));
 
       const { result } = renderHook(() => useFiles());
+
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       await act(() => result.current.uploadFile(new File(["x"], "x.txt")));
@@ -242,11 +290,13 @@ describe("useFiles", () => {
       filesApi.renameFile.mockResolvedValue({});
 
       const { result } = renderHook(() => useFiles());
+
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       await act(() => result.current.renameFile(5, "new-name"));
 
       expect(filesApi.renameFile).toHaveBeenCalledWith(5, "new-name");
+      expect(foldersApi.getContents).toHaveBeenLastCalledWith(null, "myFiles");
     });
 
     it("deleteFile sets an error from the API response instead of throwing", async () => {
@@ -255,6 +305,7 @@ describe("useFiles", () => {
       });
 
       const { result } = renderHook(() => useFiles());
+
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       await act(() => result.current.deleteFile(5));
@@ -266,6 +317,7 @@ describe("useFiles", () => {
       filesApi.downloadFile.mockRejectedValue(new Error("boom"));
 
       const { result } = renderHook(() => useFiles());
+
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       await expect(

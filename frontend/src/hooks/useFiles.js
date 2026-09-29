@@ -19,6 +19,7 @@ function useFiles() {
     setError(null);
 
     try {
+      // await new Promise((resolve) => setTimeout(resolve, 3000));
       const data = await foldersApi.getContents(folderId, activeFilter);
 
       setFolders(data.folders);
@@ -37,6 +38,8 @@ function useFiles() {
   const isEmpty = !isLoading && folders.length === 0 && files.length === 0;
 
   const setFilter = (newFilter) => {
+    if (newFilter === filter) return;
+
     setPath([]);
     setCurrentFolderId(null);
     setFolders([]);

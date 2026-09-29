@@ -30,7 +30,7 @@ function FileGridView({
         >
           {showUploader && (
             <div className="absolute top-1 left-1 z-10">
-              <UploaderAvatar owner={folder.owner} />
+              <UploaderAvatar owner={folder.owner} size="xs" />
             </div>
           )}
 
@@ -46,10 +46,12 @@ function FileGridView({
           <button
             type="button"
             onClick={() => onOpenFolder(folder.id)}
-            className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 p-4 text-center transition-colors"
+            className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 p-4 text-center transition-colors text-gray-800"
           >
-            <Folder size={32} className="text-gray-400" />
-            <span className="w-full truncate text-sm">{folder.name}</span>
+            <Folder size={32} />
+            <span className="w-full truncate text-sm font-medium">
+              {folder.name}
+            </span>
           </button>
         </div>
       ))}
@@ -64,7 +66,7 @@ function FileGridView({
           >
             {showUploader && (
               <div className="absolute top-1 left-1 z-10">
-                <UploaderAvatar owner={file.owner} />
+                <UploaderAvatar owner={file.owner} size="xs" />
               </div>
             )}
 
@@ -84,12 +86,18 @@ function FileGridView({
               />
             </div>
 
-            <FileIcon size={32} className="text-gray-400" />
-            <span className="w-full truncate text-sm">
-              {formatFileName(file.name, file.extension)}
+            <FileIcon size={32} className="text-gray-800" />
+            <span className="w-full truncate text-sm font-medium text-gray-800">
+              {file.name}
             </span>
             <span className="text-xs text-gray-400">
               {formatBytes(file.size)}
+              {file.extension && (
+                <>
+                  <span className="mx-2">|</span>
+                  {file.extension}
+                </>
+              )}
             </span>
           </div>
         );

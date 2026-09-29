@@ -1,6 +1,7 @@
 import { getAvatarColor, getInitials } from "../../utils/getInitialsAvatar";
 
 const SIZES = {
+  xs: { box: "h-8 w-8", text: "text-xs" },
   sm: { box: "h-10 w-10", text: "text-sm" },
   md: { box: "h-20 w-20", text: "text-3xl" }
 };
