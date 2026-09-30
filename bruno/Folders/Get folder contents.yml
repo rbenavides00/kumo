@@ -5,10 +5,16 @@ info:
 
 http:
   method: GET
-  url: "{{url}}/folders/contents?filter=sharedWithMe"
+  url: "{{url}}/folders/contents?filter=sharedWithMe&page=1&pageSize=10"
   params:
     - name: filter
       value: sharedWithMe
+      type: query
+    - name: page
+      value: "1"
+      type: query
+    - name: pageSize
+      value: "10"
       type: query
   auth: inherit
 

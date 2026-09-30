@@ -1,8 +1,13 @@
 import api from "./client";
 
-export async function getContents(folderId = null, filter = "myFiles") {
+export async function getContents(
+  folderId = null,
+  filter = "myFiles",
+  page = 1,
+  pageSize,
+) {
   const url = folderId ? `/folders/${folderId}/contents` : "/folders/contents";
-  const { data } = await api.get(url, { params: { filter } });
+  const { data } = await api.get(url, { params: { filter, page, pageSize } });
   return data;
 }
 

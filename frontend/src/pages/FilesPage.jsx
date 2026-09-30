@@ -10,6 +10,7 @@ import FileListView from "../components/files/FileListView";
 import FileGridView from "../components/files/FileGridView";
 import FileListSkeleton from "../components/files/skeletons/FileListSkeleton";
 import FileGridSkeleton from "../components/files/skeletons/FileGridSkeleton";
+import Pagination from "../components/files/Pagination";
 
 function FilesPage() {
   usePageTitle("Files");
@@ -22,16 +23,27 @@ function FilesPage() {
     path,
     folders,
     files,
+    page,
+    rowsPerPage,
+    totalPages,
     isLoading,
     isUploading,
     error,
     isEmpty,
+
+    // Navigation
     setFilter,
+    setPage,
+    setRowsPerPage,
     openFolderById,
     navigateToFolder,
+
+    // Folder actions
     createFolder,
     renameFolder,
     deleteFolder,
+
+    // File actions
     uploadFile,
     renameFile,
     deleteFile,
@@ -118,6 +130,15 @@ function FilesPage() {
         {error && <p className="text-sm text-red-500">{error}</p>}
 
         {renderContent()}
+        {!isLoading && !isEmpty && (
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            rowsPerPage={rowsPerPage}
+            onChangePage={setPage}
+            onChangeRowsPerPage={setRowsPerPage}
+          />
+        )}
       </Card.Body>
     </Card>
   );

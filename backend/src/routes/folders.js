@@ -3,6 +3,10 @@ const db = require("../db");
 const authMiddleware = require("../middleware/auth");
 const access = require("../utils/access");
 const shares = require("../utils/shares");
+const {
+  parsePagination,
+  splitOffsetAcrossLists,
+} = require("../utils/pagination");
 
 const router = express.Router();
 
@@ -79,7 +83,8 @@ router.post("/", authMiddleware, (req, res) => {
 });
 
 // "My files": the requester's own folder tree
-function getMyContents(req, res) {
+function getMyContents(req, res, pagination) {
+  const { page, pageSize, offset } = pagination;
   const folderId = req.params.folderId || null;
 
   if (folderId !== null) {
@@ -92,33 +97,61 @@ function getMyContents(req, res) {
     }
   }
 
-  const subfolders = db
+  const totalFolders = db
     .prepare(
-      `
-        SELECT id, parent_id, name, is_public, created_at
-        FROM folders WHERE owner_id = ? AND parent_id IS ?
-      `,
+      "SELECT COUNT(*) AS count FROM folders WHERE owner_id = ? AND parent_id IS ?",
     )
-    .all(req.user.id, folderId);
+    .get(req.user.id, folderId).count;
 
-  const files = db
+  const totalFiles = db
     .prepare(
-      `
-        SELECT id, folder_id, name, extension, size, is_public, uploaded_at
-        FROM files WHERE owner_id = ? AND folder_id IS ?
-      `,
+      "SELECT COUNT(*) AS count FROM files WHERE owner_id = ? AND folder_id IS ?",
     )
-    .all(req.user.id, folderId);
+    .get(req.user.id, folderId).count;
+
+  const total = totalFolders + totalFiles;
+  const slices = splitOffsetAcrossLists(offset, pageSize, totalFolders);
+
+  const subfolders = slices.folders.limit
+    ? db
+        .prepare(
+          `
+            SELECT id, parent_id, name, is_public, created_at
+            FROM folders WHERE owner_id = ? AND parent_id IS ?
+            ORDER BY name COLLATE NOCASE LIMIT ? OFFSET ?
+          `,
+        )
+        .all(req.user.id, folderId, slices.folders.limit, slices.folders.offset)
+    : [];
+
+  const files = slices.files.limit
+    ? db
+        .prepare(
+          `
+            SELECT id, folder_id, name, extension, size, is_public, uploaded_at
+            FROM files WHERE owner_id = ? AND folder_id IS ?
+            ORDER BY name COLLATE NOCASE LIMIT ? OFFSET ?
+          `,
+        )
+        .all(req.user.id, folderId, slices.files.limit, slices.files.offset)
+    : [];
 
   res.json({
     isOwner: true,
     folders: subfolders.map(attachShareStatus),
     files: files.map(attachFileShareStatus),
+    pagination: {
+      page,
+      pageSize,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    },
   });
 }
 
 // "Shared with me": items owned by others, public or shared directly with the requester
-function getSharedContents(req, res) {
+function getSharedContents(req, res, pagination) {
+  const { page, pageSize, offset } = pagination;
   const folderId = req.params.folderId || null;
 
   if (folderId !== null) {
@@ -133,42 +166,100 @@ function getSharedContents(req, res) {
     }
   }
 
-  const subfolders = db
+  const totalFolders = db
     .prepare(
       `
-        SELECT DISTINCT
-          f.id, f.parent_id, f.name, f.is_public, f.created_at, f.owner_id
-        FROM folders f
+        SELECT COUNT(DISTINCT f.id) AS count FROM folders f
         LEFT JOIN shares s ON s.folder_id = f.id AND s.shared_with_user_id = ?
         WHERE f.parent_id IS ? AND f.owner_id != ? AND (f.is_public = 1 OR s.id IS NOT NULL)
       `,
     )
-    .all(req.user.id, folderId, req.user.id);
+    .get(req.user.id, folderId, req.user.id).count;
 
-  const files = db
+  const totalFiles = db
     .prepare(
       `
-        SELECT DISTINCT
-          f.id, f.folder_id, f.name, f.extension, f.size, f.is_public, f.uploaded_at, f.owner_id
-        FROM files f
+        SELECT COUNT(DISTINCT f.id) AS count FROM files f
         LEFT JOIN shares s ON s.file_id = f.id AND s.shared_with_user_id = ?
         WHERE f.folder_id IS ? AND f.owner_id != ? AND (f.is_public = 1 OR s.id IS NOT NULL)
       `,
     )
-    .all(req.user.id, folderId, req.user.id);
+    .get(req.user.id, folderId, req.user.id).count;
+
+  const total = totalFolders + totalFiles;
+  const slices = splitOffsetAcrossLists(offset, pageSize, totalFolders);
+
+  const subfolders = slices.folders.limit
+    ? db
+        .prepare(
+          `
+            SELECT DISTINCT
+              f.id, f.parent_id, f.name, f.is_public, f.created_at, f.owner_id
+            FROM folders f
+            LEFT JOIN shares s ON s.folder_id = f.id AND s.shared_with_user_id = ?
+            WHERE f.parent_id IS ? AND f.owner_id != ? AND (f.is_public = 1 OR s.id IS NOT NULL)
+            ORDER BY f.name COLLATE NOCASE LIMIT ? OFFSET ?
+          `,
+        )
+        .all(
+          req.user.id,
+          folderId,
+          req.user.id,
+          slices.folders.limit,
+          slices.folders.offset,
+        )
+    : [];
+
+  const files = slices.files.limit
+    ? db
+        .prepare(
+          `
+            SELECT DISTINCT
+              f.id, f.folder_id, f.name, f.extension, f.size, f.is_public, f.uploaded_at, f.owner_id
+            FROM files f
+            LEFT JOIN shares s ON s.file_id = f.id AND s.shared_with_user_id = ?
+            WHERE f.folder_id IS ? AND f.owner_id != ? AND (f.is_public = 1 OR s.id IS NOT NULL)
+            ORDER BY f.name COLLATE NOCASE LIMIT ? OFFSET ?
+          `,
+        )
+        .all(
+          req.user.id,
+          folderId,
+          req.user.id,
+          slices.files.limit,
+          slices.files.offset,
+        )
+    : [];
 
   res.json({
     isOwner: false,
     folders: subfolders.map((f) => attachOwner(attachShareStatus(f))),
     files: files.map((f) => attachOwner(attachFileShareStatus(f))),
+    pagination: {
+      page,
+      pageSize,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    },
   });
 }
 
 function getContents(req, res) {
+  const pagination = parsePagination(req.query);
+
+  if (pagination.error) {
+    return res.status(400).json({ error: pagination.error });
+  }
+
   const filter = req.query.filter || "myFiles";
 
-  if (filter === "sharedWithMe") return getSharedContents(req, res);
-  if (filter === "myFiles") return getMyContents(req, res);
+  if (filter === "sharedWithMe") {
+    return getSharedContents(req, res, pagination);
+  }
+
+  if (filter === "myFiles") {
+    return getMyContents(req, res, pagination);
+  }
 
   return res.status(400).json({ error: "Invalid filter" });
 }

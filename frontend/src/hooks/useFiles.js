@@ -9,21 +9,34 @@ function useFiles() {
   const [path, setPath] = useState([]);
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
+  const [page, setPageState] = useState(1);
+  const [rowsPerPage, setRowsPerPageState] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
   // Data loading
-  const loadContents = async (folderId, activeFilter = filter) => {
+  const loadContents = async (
+    folderId,
+    activeFilter = filter,
+    activePage = page,
+    activeRowsPerPage = rowsPerPage,
+  ) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // await new Promise((resolve) => setTimeout(resolve, 3000));
-      const data = await foldersApi.getContents(folderId, activeFilter);
+      const data = await foldersApi.getContents(
+        folderId,
+        activeFilter,
+        activePage,
+        activeRowsPerPage,
+      );
 
       setFolders(data.folders);
       setFiles(data.files);
+      setTotalPages(data.pagination.totalPages);
     } catch {
       setError("Could not load files.");
     } finally {
@@ -32,37 +45,44 @@ function useFiles() {
   };
 
   useEffect(() => {
-    loadContents(currentFolderId, filter);
-  }, [currentFolderId, filter]);
+    loadContents(currentFolderId, filter, page, rowsPerPage);
+  }, [currentFolderId, filter, page, rowsPerPage]);
 
   const isEmpty = !isLoading && folders.length === 0 && files.length === 0;
 
   const setFilter = (newFilter) => {
-    if (newFilter === filter) return;
-
     setPath([]);
     setCurrentFolderId(null);
     setFolders([]);
     setFiles([]);
+    setPageState(1);
     setFilterState(newFilter);
+  };
+
+  const setPage = (newPage) => {
+    setPageState(newPage);
+  };
+
+  const setRowsPerPage = (newRowsPerPage) => {
+    setRowsPerPageState(newRowsPerPage);
+    setPageState(1);
   };
 
   // Navigation
   const openFolder = (folder) => {
     setPath((prevPath) => [...prevPath, { id: folder.id, name: folder.name }]);
-
+    setPageState(1);
     setCurrentFolderId(folder.id);
   };
 
   const openFolderById = (folderId) => {
     const folder = folders.find(({ id }) => id === folderId);
-
-    if (folder) {
-      openFolder(folder);
-    }
+    if (folder) openFolder(folder);
   };
 
   const navigateToFolder = (folderId) => {
+    setPageState(1);
+
     if (folderId === null) {
       setPath([]);
       setCurrentFolderId(null);
@@ -139,6 +159,9 @@ function useFiles() {
     path,
     folders,
     files,
+    page,
+    rowsPerPage,
+    totalPages,
     isLoading,
     isUploading,
     error,
@@ -146,6 +169,8 @@ function useFiles() {
 
     // Navigation
     setFilter,
+    setPage,
+    setRowsPerPage,
     openFolderById,
     navigateToFolder,
 
