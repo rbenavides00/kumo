@@ -1,5 +1,10 @@
 import api from "./client";
 
+export async function listUsers(search = "") {
+  const { data } = await api.get("/users", { params: { search } });
+  return data;
+}
+
 export async function getProfile() {
   const { data } = await api.get("/users/me");
   return data;

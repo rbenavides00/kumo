@@ -10,10 +10,15 @@ const COLORS = [
   "bg-pink-500",
 ];
 
-export function getInitials(firstName, lastName) {
+export function getInitials(firstName, lastName, username) {
   const first = firstName?.trim()?.[0] ?? "";
   const last = lastName?.trim()?.[0] ?? "";
-  return (first + last).toUpperCase() || "?";
+  const initials = (first + last).toUpperCase();
+
+  if (initials) return initials;
+
+  const usernameInitial = username?.trim()?.[0]?.toUpperCase();
+  return usernameInitial ?? "?";
 }
 
 // TODO: Update functionality once UUIDs are implemented

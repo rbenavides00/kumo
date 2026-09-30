@@ -6,7 +6,7 @@ import { formatFileName } from "../../utils/formatFileName";
 import { getFileIcon } from "../../utils/getFileIcon";
 
 import ItemMenu from "./ItemMenu";
-import UploaderAvatar from "./UploaderAvatar";
+import UserAvatar from "../ui/UserAvatar";
 
 function FileListView({
   filter,
@@ -55,7 +55,7 @@ function FileListView({
                   className="flex min-w-0 w-full items-center gap-2 text-left text-sm text-gray-800 sm:gap-3 cursor-pointer"
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100">
-                    <Folder size={18} className="shrink-0 text-gray-800" />
+                    <Folder size={18} className="text-gray-800" />
                   </span>
 
                   <span className="min-w-0 truncate font-medium">
@@ -66,7 +66,7 @@ function FileListView({
 
               {showUploader && (
                 <td className="px-3 py-2 text-center sm:px-4">
-                  <UploaderAvatar owner={folder.owner} />
+                  <UserAvatar user={folder.owner} showDetails />
                 </td>
               )}
 
@@ -76,6 +76,8 @@ function FileListView({
 
               <td className="px-2 py-2 sm:px-4">
                 <ItemMenu
+                  itemType="folder"
+                  itemId={folder.id}
                   name={folder.name}
                   canEdit={canEdit}
                   onRename={(name) => onRenameFolder(folder.id, name)}
@@ -115,7 +117,7 @@ function FileListView({
 
                 {showUploader && (
                   <td className="px-3 py-3 text-center sm:px-4">
-                    <UploaderAvatar owner={file.owner} />
+                    <UserAvatar user={file.owner} showDetails />
                   </td>
                 )}
 
@@ -125,6 +127,8 @@ function FileListView({
 
                 <td className="px-2 py-2 sm:px-4">
                   <ItemMenu
+                    itemType="file"
+                    itemId={file.id}
                     name={file.name}
                     extension={file.extension}
                     canEdit={canEdit}

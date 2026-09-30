@@ -5,7 +5,7 @@ import { formatFileName } from "../../utils/formatFileName";
 import { getFileIcon } from "../../utils/getFileIcon";
 
 import ItemMenu from "./ItemMenu";
-import UploaderAvatar from "./UploaderAvatar";
+import UserAvatar from "../ui/UserAvatar";
 
 function FileGridView({
   folders,
@@ -30,12 +30,14 @@ function FileGridView({
         >
           {showUploader && (
             <div className="absolute top-1 left-1 z-10">
-              <UploaderAvatar owner={folder.owner} size="xs" />
+              <UserAvatar user={folder.owner} size="xs" showDetails />
             </div>
           )}
 
           <div className="absolute top-1 right-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
             <ItemMenu
+              itemType="folder"
+              itemId={folder.id}
               name={folder.name}
               canEdit={canEdit}
               onRename={(name) => onRenameFolder(folder.id, name)}
@@ -66,12 +68,14 @@ function FileGridView({
           >
             {showUploader && (
               <div className="absolute top-1 left-1 z-10">
-                <UploaderAvatar owner={file.owner} size="xs" />
+                <UserAvatar user={file.owner} size="xs" showDetails />
               </div>
             )}
 
             <div className="absolute top-1 right-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
               <ItemMenu
+                itemType="file"
+                itemId={file.id}
                 name={file.name}
                 extension={file.extension}
                 canEdit={canEdit}

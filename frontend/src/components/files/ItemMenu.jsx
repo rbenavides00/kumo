@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { Download, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Download, MoreVertical, Pencil, Share2, Trash2 } from "lucide-react";
 
 import PromptModal from "../ui/PromptModal";
 import ConfirmModal from "../ui/ConfirmModal";
+import ShareModal from "./ShareModal";
 
 // TODO: Change position if menu is too low on the screen
 function ItemMenu({
+  itemType,
+  itemId,
   name,
   extension,
   canEdit = true,
@@ -15,6 +18,7 @@ function ItemMenu({
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const fullName = extension ? `${name}.${extension}` : name;
@@ -76,6 +80,19 @@ function ItemMenu({
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsMenuOpen(false);
+                    setIsShareModalOpen(true);
+                  }}
+                  className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100"
+                >
+                  <Share2 size={14} />
+                  Share
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMenuOpen(false);
                     setIsDeleteModalOpen(true);
                   }}
                   className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50"
@@ -101,6 +118,13 @@ function ItemMenu({
             suffix={extension ? `.${extension}` : undefined}
             submitLabel="Rename"
             validate={(value) => (!value ? "Item name is required" : null)}
+          />
+          <ShareModal
+            isOpen={isShareModalOpen}
+            onClose={() => setIsShareModalOpen(false)}
+            itemType={itemType}
+            itemId={itemId}
+            itemName={fullName}
           />
           <ConfirmModal
             isOpen={isDeleteModalOpen}

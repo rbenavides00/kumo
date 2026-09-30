@@ -110,6 +110,45 @@ router.patch("/me/password", authMiddleware, async (req, res) => {
   res.json({ message: "Password updated" });
 });
 
+// List other users (for selecting who to share with)
+router.get("/", authMiddleware, (req, res) => {
+  const search = req.query.search?.trim();
+
+  const users = search
+    ? db
+        .prepare(
+          `
+            SELECT id, username, first_name, last_name, avatar_path
+            FROM users
+            WHERE id != ? AND username LIKE ?
+            ORDER BY username
+            LIMIT 20
+          `,
+        )
+        .all(req.user.id, `%${search}%`)
+    : db
+        .prepare(
+          `
+            SELECT id, username, first_name, last_name, avatar_path
+            FROM users
+            WHERE id != ?
+            ORDER BY username
+            LIMIT 20
+          `,
+        )
+        .all(req.user.id);
+
+  res.json(
+    users.map((u) => ({
+      id: u.id,
+      username: u.username,
+      firstName: u.first_name,
+      lastName: u.last_name,
+      hasAvatar: Boolean(u.avatar_path),
+    })),
+  );
+});
+
 // Public profile info of any user
 router.get("/:id", authMiddleware, (req, res) => {
   const user = db

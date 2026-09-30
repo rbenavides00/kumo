@@ -75,7 +75,7 @@ function ModalHeader({ title, onClose }) {
       <button
         type="button"
         onClick={onClose}
-        className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+        className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors cursor-pointer"
       >
         <X size={18} />
       </button>
