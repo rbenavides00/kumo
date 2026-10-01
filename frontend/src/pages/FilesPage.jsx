@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 
+import { getSettings } from "../utils/settings";
 import useFiles from "../hooks/useFiles";
 import usePageTitle from "../hooks/usePageTitle";
 import Card from "../components/ui/Card";
@@ -14,7 +15,7 @@ import Pagination from "../components/files/Pagination";
 
 function FilesPage() {
   usePageTitle("Files");
-  const [viewMode, setViewMode] = useState("list");
+  const [viewMode, setViewMode] = useState(() => getSettings().filesView);
   const fileInputRef = useRef(null);
 
   const {

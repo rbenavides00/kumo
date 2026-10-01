@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+
+import { getSettings } from "../utils/settings";
 import * as foldersApi from "../api/folders";
 import * as filesApi from "../api/files";
 
 function useFiles() {
   // State
-  const [filter, setFilterState] = useState("myFiles");
+  const [filter, setFilterState] = useState(() => getSettings().filesFilter);
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [path, setPath] = useState([]);
   const [folders, setFolders] = useState([]);
