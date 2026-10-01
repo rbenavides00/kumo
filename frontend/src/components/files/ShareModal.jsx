@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Check, Globe, Lock, Users } from "lucide-react";
 
 import Modal from "../ui/Modal";
-import Avatar from "../ui/Avatar";
 import UserAvatar from "../ui/UserAvatar";
 import * as sharesApi from "../../api/shares";
 import * as usersApi from "../../api/users";
