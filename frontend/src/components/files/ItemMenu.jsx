@@ -1,11 +1,19 @@
 import { useState } from "react";
 import { Download, MoreVertical, Pencil, Share2, Trash2 } from "lucide-react";
 
-import PromptModal from "../ui/PromptModal";
-import ConfirmModal from "../ui/ConfirmModal";
-import ShareModal from "./ShareModal";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import PromptDialog from "@/components/shared/PromptDialog";
+import ShareModal from "@/components/files/ShareDialog";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-// TODO: Change position if menu is too low on the screen
+
 function ItemMenu({
   itemType,
   itemId,
@@ -16,101 +24,68 @@ function ItemMenu({
   onDelete,
   onDownload,
 }) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [dialog, setDialog] = useState(null);
+  const closeDialog = () => setDialog(null);
 
   const fullName = extension ? `${name}.${extension}` : name;
 
   if (!canEdit && !onDownload) return null;
 
   return (
-    <div className="relative text-center">
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsMenuOpen((prev) => !prev);
-        }}
-        className="cursor-pointer rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
-      >
-        <MoreVertical size={16} />
-      </button>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label={`Actions for ${fullName}`}
+            />
+          }
+        >
+          <MoreVertical />
+        </DropdownMenuTrigger>
 
-      {isMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsMenuOpen(false)}
-          />
-          <div className="absolute right-0 z-20 mt-1 w-36 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-            {onDownload && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsMenuOpen(false);
-                  onDownload();
-                }}
-                className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100"
+        <DropdownMenuContent>
+          {onDownload && (
+            <DropdownMenuItem onClick={onDownload}>
+              <Download />
+              Download
+            </DropdownMenuItem>
+          )}
+
+          {canEdit && (
+            <>
+              <DropdownMenuItem onClick={() => setDialog("rename")}>
+                <Pencil />
+                Rename
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => setDialog("share")}>
+                <Share2 />
+                Share
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setDialog("delete")}
               >
-                <Download size={14} />
-                Download
-              </button>
-            )}
-
-            {canEdit && (
-              <>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsMenuOpen(false);
-                    setIsRenameModalOpen(true);
-                  }}
-                  className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100"
-                >
-                  <Pencil size={14} />
-                  Rename
-                </button>
-
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsMenuOpen(false);
-                    setIsShareModalOpen(true);
-                  }}
-                  className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100"
-                >
-                  <Share2 size={14} />
-                  Share
-                </button>
-
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsMenuOpen(false);
-                    setIsDeleteModalOpen(true);
-                  }}
-                  className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50"
-                >
-                  <Trash2 size={14} />
-                  Delete
-                </button>
-              </>
-            )}
-          </div>
-        </>
-      )}
+                <Trash2 />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {canEdit && (
         <>
-          <PromptModal
-            isOpen={isRenameModalOpen}
-            onClose={() => setIsRenameModalOpen(false)}
+          <PromptDialog
+            isOpen={dialog === "rename"}
+            onClose={closeDialog}
             onSubmit={onRename}
             title="Rename item"
             placeholder="New name"
@@ -119,16 +94,18 @@ function ItemMenu({
             submitLabel="Rename"
             validate={(value) => (!value ? "Item name is required" : null)}
           />
+
           <ShareModal
-            isOpen={isShareModalOpen}
-            onClose={() => setIsShareModalOpen(false)}
+            isOpen={dialog === "share"}
+            onClose={closeDialog}
             itemType={itemType}
             itemId={itemId}
             itemName={fullName}
           />
-          <ConfirmModal
-            isOpen={isDeleteModalOpen}
-            onClose={() => setIsDeleteModalOpen(false)}
+
+          <ConfirmDialog
+            isOpen={dialog === "delete"}
+            onClose={closeDialog}
             onConfirm={onDelete}
             title="Delete"
             message={
@@ -138,11 +115,11 @@ function ItemMenu({
               </>
             }
             confirmLabel="Delete"
-            isDestructive
+            variant="destructive"
           />
         </>
       )}
-    </div>
+    </>
   );
 }
 

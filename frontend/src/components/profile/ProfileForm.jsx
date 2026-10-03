@@ -1,85 +1,112 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-import * as usersApi from "../../api/users";
+import { PageSection } from "@/components/shared/Page";
+import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+
+import * as usersApi from "@/api/users";
+
+const profileSchema = z.object({
+  firstName: z.string().trim().min(1, "First name is required"),
+  lastName: z.string().trim().min(1, "Last name is required"),
+});
 
 function ProfileForm({ initialFirstName, initialLastName, onUpdated }) {
-  const [firstName, setFirstName] = useState(initialFirstName ?? "");
-  const [lastName, setLastName] = useState(initialLastName ?? "");
-  const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      firstName: initialFirstName ?? "",
+      lastName: initialLastName ?? "",
+    },
+  });
 
-    if (isSubmitting) {
-      return;
-    }
+  const onSubmit = async ({ firstName, lastName }) => {
+    if (!isDirty) return;
 
-    if (firstName === initialFirstName && lastName === initialLastName) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError(null);
+    clearErrors("root");
     setSuccessMessage(null);
 
     try {
       const updatedUser = await usersApi.updateProfile(firstName, lastName);
       onUpdated(updatedUser);
+
+      reset({
+        firstName: updatedUser.first_name ?? "",
+        lastName: updatedUser.last_name ?? "",
+      });
       setSuccessMessage("Profile updated");
     } catch (err) {
-      setError(err.response?.data?.error ?? "Could not update profile");
-    } finally {
-      setIsSubmitting(false);
+      setError("root", {
+        type: "server",
+        message: err.response?.data?.error ?? "Could not update profile",
+      });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <h2 className="text-md font-semibold text-gray-800">
-        Personal information
-      </h2>
+    <PageSection title="Personal information">
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field data-invalid={!!errors.firstName}>
+            <FieldLabel htmlFor="firstName">First name</FieldLabel>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            First name
-          </label>
-          <input
-            type="text"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
-          />
-        </div>
+            <Input
+              {...register("firstName")}
+              id="firstName"
+              autoComplete="given-name"
+              aria-invalid={!!errors.firstName}
+              disabled={isSubmitting}
+            />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Last name
-          </label>
-          <input
-            type="text"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
-          />
-        </div>
-      </div>
+            <FieldError errors={[errors.firstName]} />
+          </Field>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-      {successMessage && (
-        <p className="text-sm text-green-600">{successMessage}</p>
-      )}
+          <Field data-invalid={!!errors.lastName}>
+            <FieldLabel htmlFor="lastName">Last name</FieldLabel>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-fit rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-60 cursor-pointer"
-      >
-        {isSubmitting ? "Saving..." : "Save changes"}
-      </button>
-    </form>
+            <Input
+              {...register("lastName")}
+              id="lastName"
+              autoComplete="family-name"
+              aria-invalid={!!errors.lastName}
+              disabled={isSubmitting}
+            />
+
+            <FieldError errors={[errors.lastName]} />
+          </Field>
+        </FieldGroup>
+
+        <FieldError errors={[errors.root]} />
+
+        {successMessage && !isDirty && (
+          <p className="text-sm text-green-600 dark:text-green-500">
+            {successMessage}
+          </p>
+        )}
+
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : "Save changes"}
+        </Button>
+      </form>
+    </PageSection>
   );
 }
 

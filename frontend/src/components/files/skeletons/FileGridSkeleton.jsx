@@ -1,17 +1,20 @@
-function FileGridSkeleton() {
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+
+function FileGridSkeleton({ items = 10 }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-      {[...Array(10)].map((_, index) => (
-        <div
-          key={index}
-          className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 p-4"
-        >
-          <div className="h-10 w-10 animate-pulse rounded bg-gray-200" />
+      {Array.from({ length: items }, (_, index) => (
+        <Card key={index} className="gap-0 py-0">
+          <div className="flex w-full flex-col items-center gap-3 px-4 pt-8 pb-5">
+            <Skeleton className="size-14 rounded-xl" />
 
-          <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200" />
-
-          <div className="h-3 w-1/2 animate-pulse rounded bg-gray-100" />
-        </div>
+            <div className="flex w-full flex-col items-center gap-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
+          </div>
+        </Card>
       ))}
     </div>
   );

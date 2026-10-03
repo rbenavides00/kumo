@@ -1,11 +1,42 @@
 import { Folder } from "lucide-react";
 
-import { formatBytes } from "../../utils/formatBytes";
-import { formatFileName } from "../../utils/formatFileName";
-import { getFileIcon } from "../../utils/getFileIcon";
+import ItemMenu from "@/components/files/ItemMenu";
+import UserAvatar from "@/components/shared/UserAvatar";
+import { Card } from "@/components/ui/card";
 
-import ItemMenu from "./ItemMenu";
-import UserAvatar from "../ui/UserAvatar";
+import { cn } from "@/lib/utils";
+import { formatBytes } from "@/utils/formatBytes";
+import { formatFileName } from "@/utils/formatFileName";
+import { getFileIcon } from "@/utils/getFileIcon";
+
+const contentClass =
+  "flex w-full flex-col items-center gap-3 px-4 pt-8 pb-5 text-center";
+
+function ItemTile({ icon: Icon }) {
+  return (
+    <span className="flex size-14 items-center justify-center rounded-xl bg-muted">
+      <Icon className="size-7" />
+    </span>
+  );
+}
+
+function ItemCard({ owner, showOwner, menu, className, children }) {
+  return (
+    <Card className={cn("group relative gap-0 py-0 transition-all", className)}>
+      {showOwner && (
+        <div className="absolute top-2 left-2 z-10">
+          <UserAvatar user={owner} showDetails className="size-6" />
+        </div>
+      )}
+
+      <div className="absolute top-2 right-2 z-10 transition-opacity sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100">
+        {menu}
+      </div>
+
+      {children}
+    </Card>
+  );
+}
 
 function FileGridView({
   folders,
@@ -19,22 +50,17 @@ function FileGridView({
   onDownloadFile,
 }) {
   const canEdit = filter === "myFiles";
-  const showUploader = filter === "sharedWithMe";
+  const showOwner = filter === "sharedWithMe";
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
       {folders.map((folder) => (
-        <div
+        <ItemCard
           key={`folder-${folder.id}`}
-          className="group relative rounded-xl border border-gray-200 hover:bg-gray-50"
-        >
-          {showUploader && (
-            <div className="absolute top-1 left-1 z-10">
-              <UserAvatar user={folder.owner} size="xs" showDetails />
-            </div>
-          )}
-
-          <div className="absolute top-1 right-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          owner={folder.owner}
+          showOwner={showOwner}
+          className="hover:border-ring/50 hover:shadow-sm"
+          menu={
             <ItemMenu
               itemType="folder"
               itemId={folder.id}
@@ -43,69 +69,66 @@ function FileGridView({
               onRename={(name) => onRenameFolder(folder.id, name)}
               onDelete={() => onDeleteFolder(folder.id)}
             />
-          </div>
-
+          }
+        >
           <button
             type="button"
             onClick={() => onOpenFolder(folder.id)}
-            className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 p-4 text-center transition-colors text-gray-800"
+            className={cn(
+              contentClass,
+              "focus-visible:ring-2 focus-visible:ring-ring/50",
+            )}
           >
-            <Folder size={32} />
-            <span className="w-full truncate text-sm font-medium">
-              {folder.name}
-            </span>
+            <ItemTile icon={Folder} />
+
+            <div className="w-full min-w-0">
+              <p className="truncate font-medium mb-4">{folder.name}</p>
+            </div>
           </button>
-        </div>
+        </ItemCard>
       ))}
 
-      {files.map((file) => {
-        const FileIcon = getFileIcon(file.extension);
+      {files.map((file) => (
+        <ItemCard
+          key={`file-${file.id}`}
+          owner={file.owner}
+          showOwner={showOwner}
+          menu={
+            <ItemMenu
+              itemType="file"
+              itemId={file.id}
+              name={file.name}
+              extension={file.extension}
+              canEdit={canEdit}
+              onRename={(name) => onRenameFile(file.id, name)}
+              onDelete={() => onDeleteFile(file.id)}
+              onDownload={() =>
+                onDownloadFile(
+                  file.id,
+                  formatFileName(file.name, file.extension),
+                )
+              }
+            />
+          }
+        >
+          <div className={contentClass}>
+            <ItemTile icon={getFileIcon(file.extension)} />
 
-        return (
-          <div
-            key={`file-${file.id}`}
-            className="group relative flex flex-col items-center gap-2 rounded-xl border border-gray-200 p-4 text-center"
-          >
-            {showUploader && (
-              <div className="absolute top-1 left-1 z-10">
-                <UserAvatar user={file.owner} size="xs" showDetails />
-              </div>
-            )}
-
-            <div className="absolute top-1 right-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-              <ItemMenu
-                itemType="file"
-                itemId={file.id}
-                name={file.name}
-                extension={file.extension}
-                canEdit={canEdit}
-                onRename={(name) => onRenameFile(file.id, name)}
-                onDelete={() => onDeleteFile(file.id)}
-                onDownload={() =>
-                  onDownloadFile(
-                    file.id,
-                    formatFileName(file.name, file.extension),
-                  )
-                }
-              />
+            <div className="w-full min-w-0">
+              <p className="truncate text-sm font-medium">{file.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {formatBytes(file.size)}
+                {file.extension && (
+                  <>
+                    <span className="mx-1.5">|</span>
+                    {file.extension}
+                  </>
+                )}
+              </p>
             </div>
-
-            <FileIcon size={32} className="text-gray-800" />
-            <span className="w-full truncate text-sm font-medium text-gray-800">
-              {file.name}
-            </span>
-            <span className="text-xs text-gray-400">
-              {formatBytes(file.size)}
-              {file.extension && (
-                <>
-                  <span className="mx-2">|</span>
-                  {file.extension}
-                </>
-              )}
-            </span>
           </div>
-        );
-      })}
+        </ItemCard>
+      ))}
     </div>
   );
 }

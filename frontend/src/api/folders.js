@@ -1,4 +1,4 @@
-import api from "./client";
+import api from "@/api/client";
 
 export async function getContents(
   folderId = null,
@@ -6,6 +6,7 @@ export async function getContents(
   page = 1,
   pageSize,
 ) {
+  // await new Promise((resolve) => setTimeout(resolve, 3000));
   const url = folderId ? `/folders/${folderId}/contents` : "/folders/contents";
   const { data } = await api.get(url, { params: { filter, page, pageSize } });
   return data;

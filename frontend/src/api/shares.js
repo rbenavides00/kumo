@@ -1,4 +1,4 @@
-import api from "./client";
+import api from "@/api/client";
 
 export async function getShareSettings(itemType, itemId) {
   const { data } = await api.get(`/shares/${itemType}/${itemId}`);

@@ -1,17 +1,19 @@
 import { useRef, useState } from "react";
 
-import { getSettings } from "../utils/settings";
-import useFiles from "../hooks/useFiles";
-import usePageTitle from "../hooks/usePageTitle";
-import Card from "../components/ui/Card";
-import Breadcrumbs from "../components/files/Breadcrumbs";
-import EmptyState from "../components/files/EmptyState";
-import FilesToolbar from "../components/files/FilesToolbar";
-import FileListView from "../components/files/FileListView";
-import FileGridView from "../components/files/FileGridView";
-import FileListSkeleton from "../components/files/skeletons/FileListSkeleton";
-import FileGridSkeleton from "../components/files/skeletons/FileGridSkeleton";
-import Pagination from "../components/files/Pagination";
+import { Page, PageHeader } from "@/components/shared/Page";
+
+import Breadcrumbs from "@/components/files/Breadcrumbs";
+import EmptyState from "@/components/files/EmptyState";
+import FilesToolbar from "@/components/files/FilesToolbar";
+import FileListView from "@/components/files/FileListView";
+import FileGridView from "@/components/files/FileGridView";
+import FileListSkeleton from "@/components/files/skeletons/FileListSkeleton";
+import FileGridSkeleton from "@/components/files/skeletons/FileGridSkeleton";
+import Pagination from "@/components/files/Pagination";
+
+import useFiles from "@/hooks/useFiles";
+import usePageTitle from "@/hooks/usePageTitle";
+import { getSettings } from "@/utils/settings";
 
 function FilesPage() {
   usePageTitle("Files");
@@ -105,10 +107,13 @@ function FilesPage() {
   };
 
   return (
-    <Card>
-      <Card.Header title="Files" subtitle="Everything everyone has uploaded." />
+    <Page>
+      <PageHeader
+        title="Files"
+        description="Everything everyone has uploaded."
+      />
 
-      <Card.Body className="flex flex-col gap-4">
+      <div className="space-y-3">
         <Breadcrumbs path={path} onNavigate={navigateToFolder} />
 
         <FilesToolbar
@@ -140,8 +145,8 @@ function FilesPage() {
             onChangeRowsPerPage={setRowsPerPage}
           />
         )}
-      </Card.Body>
-    </Card>
+      </div>
+    </Page>
   );
 }
 

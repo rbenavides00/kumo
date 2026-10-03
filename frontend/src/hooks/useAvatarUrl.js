@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import api from "../api/client";
+import api from "@/api/client";
 
 const avatarCache = new Map();
 
@@ -18,25 +18,24 @@ function fetchAvatar(userId) {
 }
 
 function useAvatarUrl(userId, hasAvatar) {
-  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [result, setResult] = useState({ userId: null, url: null });
+  const shouldFetch = Boolean(hasAvatar && userId);
 
   useEffect(() => {
-    if (!hasAvatar || !userId) {
-      setAvatarUrl(null);
-      return;
-    }
+    if (!shouldFetch) return;
 
     let cancelled = false;
+
     fetchAvatar(userId).then((url) => {
-      if (!cancelled) setAvatarUrl(url);
+      if (!cancelled) setResult({ userId, url });
     });
 
     return () => {
       cancelled = true;
     };
-  }, [userId, hasAvatar]);
+  }, [userId, shouldFetch]);
 
-  return avatarUrl;
+  return shouldFetch && result.userId === userId ? result.url : null;
 }
 
 export default useAvatarUrl;

@@ -1,10 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronsLeft,
   ChevronLeft,
   ChevronRight,
   ChevronsRight,
 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ROWS_PER_PAGE_OPTIONS = [5, 10, 25, 50];
 
@@ -17,38 +28,53 @@ function Pagination({
 }) {
   const [pageInput, setPageInput] = useState(String(page));
 
+  useEffect(() => {
+    setPageInput(String(page));
+  }, [page]);
+
   const startPage = Math.max(1, Math.min(page - 1, totalPages - 2));
   const pages = Array.from(
     { length: Math.min(3, totalPages) },
     (_, i) => startPage + i,
   );
 
+  const commitPageInput = () => {
+    const newPage = Number(pageInput);
+    const isValid =
+      Number.isInteger(newPage) && newPage >= 1 && newPage <= totalPages;
+
+    if (!isValid) {
+      setPageInput(String(page));
+      return;
+    }
+
+    setPageInput(String(newPage));
+    if (newPage !== page) onChangePage(newPage);
+  };
+
   const handlePageSubmit = (event) => {
     event.preventDefault();
-
-    const newPage = Number(pageInput);
-
-    if (newPage >= 1 && newPage <= totalPages) {
-      onChangePage(newPage);
-    } else {
-      setPageInput(String(page));
-    }
+    commitPageInput();
   };
 
   return (
-    <div className="flex items-center justify-center pt-2 sm:justify-between">
-      <div className="items-center gap-3 text-sm text-gray-500 hidden sm:flex">
-        <form onSubmit={handlePageSubmit} className="flex items-center gap-1">
+    <nav
+      aria-label="Pagination"
+      className="flex items-center justify-center sm:justify-between gap-0"
+    >
+      <div className="hidden items-center gap-4 text-sm text-muted-foreground sm:flex">
+        <form onSubmit={handlePageSubmit} className="flex items-center gap-2">
           <span>Page</span>
 
-          <input
+          <Input
             type="number"
-            min="1"
+            min={1}
             max={totalPages}
             value={pageInput}
             onChange={(event) => setPageInput(event.target.value)}
-            onBlur={handlePageSubmit}
-            className="w-8 rounded-md border border-gray-200 px-1 py-1 text-center text-sm outline-none focus:border-gray-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            onBlur={commitPageInput}
+            aria-label="Page number"
+            className="h-8 w-14 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
 
           <span>of {totalPages}</span>
@@ -56,82 +82,90 @@ function Pagination({
 
         <span>|</span>
 
-        <label className="flex items-center gap-2">
-          <span>Rows per page</span>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="rows-per-page" className="font-normal">
+            Rows per page
+          </Label>
 
-          <select
-            value={rowsPerPage}
-            onChange={(event) =>
-              onChangeRowsPerPage(Number(event.target.value))
-            }
-            className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm outline-none focus:border-gray-400"
+          <Select
+            value={String(rowsPerPage)}
+            onValueChange={(value) => onChangeRowsPerPage(Number(value))}
           >
-            {ROWS_PER_PAGE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
+            <SelectTrigger id="rows-per-page" size="sm" className="w-18">
+              <SelectValue />
+            </SelectTrigger>
+
+            <SelectContent>
+              {ROWS_PER_PAGE_OPTIONS.map((option) => (
+                <SelectItem key={option} value={String(option)}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => onChangePage(1)}
-          disabled={page <= 1}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
           aria-label="First page"
-          className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
-        >
-          <ChevronsLeft size={16} />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onChangePage(page - 1)}
           disabled={page <= 1}
-          aria-label="Previous page"
-          className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
+          onClick={() => onChangePage(1)}
         >
-          <ChevronLeft size={16} />
-        </button>
+          <ChevronsLeft />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          aria-label="Previous page"
+          disabled={page <= 1}
+          onClick={() => onChangePage(page - 1)}
+        >
+          <ChevronLeft />
+        </Button>
 
         {pages.map((pageNumber) => (
-          <button
+          <Button
             key={pageNumber}
-            type="button"
+            variant={pageNumber === page ? "outline" : "ghost"}
+            size="icon"
+            className="size-8"
+            aria-label={`Page ${pageNumber}`}
+            aria-current={pageNumber === page ? "page" : undefined}
             onClick={() => onChangePage(pageNumber)}
-            className={`min-w-8 rounded-lg px-2 py-1.5 text-sm transition-colors cursor-pointer ${
-              pageNumber === page
-                ? "bg-gray-900 text-white"
-                : "text-gray-500 hover:bg-gray-100"
-            }`}
           >
             {pageNumber}
-          </button>
+          </Button>
         ))}
 
-        <button
-          type="button"
-          onClick={() => onChangePage(page + 1)}
-          disabled={page >= totalPages}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
           aria-label="Next page"
-          className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
-        >
-          <ChevronRight size={16} />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onChangePage(totalPages)}
           disabled={page >= totalPages}
-          aria-label="Last page"
-          className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
+          onClick={() => onChangePage(page + 1)}
         >
-          <ChevronsRight size={16} />
-        </button>
+          <ChevronRight />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          aria-label="Last page"
+          disabled={page >= totalPages}
+          onClick={() => onChangePage(totalPages)}
+        >
+          <ChevronsRight />
+        </Button>
       </div>
-    </div>
+    </nav>
   );
 }
 

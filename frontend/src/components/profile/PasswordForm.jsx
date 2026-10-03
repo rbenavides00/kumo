@@ -1,109 +1,138 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-import * as usersApi from "../../api/users";
+import { PageSection } from "@/components/shared/Page";
+import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+
+import * as usersApi from "@/api/users";
+
+const passwordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z
+      .string()
+      .min(1, "New password is required")
+      .min(8, "New password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your new password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "New passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+const emptyValues = {
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+};
 
 function PasswordForm() {
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: emptyValues,
+  });
 
-    if (isSubmitting) {
-      return;
-    }
-
-    if (!currentPassword || !newPassword) {
-      setError("Current and new password are required");
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      setError("New password must be at least 8 characters");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError("New passwords do not match");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError(null);
+  const onSubmit = async ({ currentPassword, newPassword }) => {
+    clearErrors("root");
     setSuccessMessage(null);
 
     try {
       await usersApi.updatePassword(currentPassword, newPassword);
+      reset(emptyValues);
       setSuccessMessage("Password updated");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
     } catch (err) {
-      setError(err.response?.data?.error ?? "Could not update password");
-    } finally {
-      setIsSubmitting(false);
+      setError("root", {
+        type: "server",
+        message: err.response?.data?.error ?? "Could not update password",
+      });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <h2 className="text-md font-semibold text-gray-800">Change password</h2>
+    <PageSection title="Change password">
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+        <FieldGroup>
+          <Field data-invalid={!!errors.currentPassword}>
+            <FieldLabel htmlFor="currentPassword">Current password</FieldLabel>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Current password
-        </label>
-        <input
-          type="password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
-        />
-      </div>
+            <Input
+              {...register("currentPassword")}
+              id="currentPassword"
+              type="password"
+              autoComplete="current-password"
+              aria-invalid={!!errors.currentPassword}
+              disabled={isSubmitting}
+            />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            New password
-          </label>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
-          />
-        </div>
+            <FieldError errors={[errors.currentPassword]} />
+          </Field>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Confirm new password
-          </label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
-          />
-        </div>
-      </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field data-invalid={!!errors.newPassword}>
+              <FieldLabel htmlFor="newPassword">New password</FieldLabel>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-      {successMessage && (
-        <p className="text-sm text-green-600">{successMessage}</p>
-      )}
+              <Input
+                {...register("newPassword")}
+                id="newPassword"
+                type="password"
+                autoComplete="new-password"
+                aria-invalid={!!errors.newPassword}
+                disabled={isSubmitting}
+              />
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-fit rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-60 cursor-pointer"
-      >
-        {isSubmitting ? "Updating..." : "Update password"}
-      </button>
-    </form>
+              <FieldError errors={[errors.newPassword]} />
+            </Field>
+
+            <Field data-invalid={!!errors.confirmPassword}>
+              <FieldLabel htmlFor="confirmPassword">
+                Confirm new password
+              </FieldLabel>
+
+              <Input
+                {...register("confirmPassword")}
+                id="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                aria-invalid={!!errors.confirmPassword}
+                disabled={isSubmitting}
+              />
+
+              <FieldError errors={[errors.confirmPassword]} />
+            </Field>
+          </div>
+        </FieldGroup>
+
+        <FieldError errors={[errors.root]} />
+
+        {successMessage && !isDirty && (
+          <p className="text-sm text-green-600 dark:text-green-500">
+            {successMessage}
+          </p>
+        )}
+
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Updating..." : "Update password"}
+        </Button>
+      </form>
+    </PageSection>
   );
 }
 

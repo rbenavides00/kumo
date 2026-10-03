@@ -1,45 +1,58 @@
-function FileListSkeleton() {
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+function FileListSkeleton({ rows = 5, showAuthor = false }) {
   return (
-    <div className="rounded-xl border border-gray-200">
-      <table className="w-full table-fixed">
-        <thead className="border-b border-gray-200 bg-gray-50">
-          <tr>
-            <th className="w-auto px-3 py-2 sm:px-4">
-              <div className="h-4 w-10 animate-pulse rounded bg-gray-300" />
-            </th>
+    <Table>
+      <TableHeader>
+        <TableRow className="hover:bg-transparent">
+          <TableHead>Name</TableHead>
+          {showAuthor && <TableHead>Author</TableHead>}
+          <TableHead>Date</TableHead>
+          <TableHead className="w-0">
+            <span className="sr-only">Actions</span>
+          </TableHead>
+        </TableRow>
+      </TableHeader>
 
-            <th className="w-20 px-3 py-2 sm:w-30 sm:px-4">
-              <div className="h-4 w-10 animate-pulse rounded bg-gray-300" />
-            </th>
+      <TableBody>
+        {Array.from({ length: rows }, (_, index) => (
+          <TableRow key={index} className="hover:bg-transparent">
+            <TableCell>
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-md" />
 
-            <th className="w-10 sm:w-12" />
-          </tr>
-        </thead>
-
-        <tbody className="divide-y divide-gray-100">
-          {[...Array(5)].map((_, index) => (
-            <tr key={index}>
-              <td className="px-3 py-3 sm:px-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 animate-pulse rounded-md bg-gray-100" />
-
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <div className="h-3 w-30 animate-pulse rounded bg-gray-200 truncate" />
-                    <div className="h-2 w-20 animate-pulse rounded bg-gray-100" />
-                  </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-24" />
                 </div>
-              </td>
+              </div>
+            </TableCell>
 
-              <td className="px-3 py-3 sm:px-4">
-                <div className="h-3 w-full animate-pulse rounded bg-gray-100" />
-              </td>
+            {showAuthor && (
+              <TableCell>
+                <Skeleton className="size-8 rounded-full" />
+              </TableCell>
+            )}
 
-              <td />
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+            <TableCell>
+              <Skeleton className="h-4 w-20" />
+            </TableCell>
+
+            <TableCell>
+              <Skeleton className="size-8 rounded-md" />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 

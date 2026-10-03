@@ -1,12 +1,36 @@
 import { Folder } from "lucide-react";
 
-import { formatBytes } from "../../utils/formatBytes";
-import { formatDateMedium } from "../../utils/formatDate";
-import { formatFileName } from "../../utils/formatFileName";
-import { getFileIcon } from "../../utils/getFileIcon";
+import ItemMenu from "@/components/files/ItemMenu";
+import UserAvatar from "@/components/shared/UserAvatar";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-import ItemMenu from "./ItemMenu";
-import UserAvatar from "../ui/UserAvatar";
+import { formatBytes } from "@/utils/formatBytes";
+import { formatDateMedium } from "@/utils/formatDate";
+import { formatFileName } from "@/utils/formatFileName";
+import { getFileIcon } from "@/utils/getFileIcon";
+
+function ItemIcon({ icon: Icon }) {
+  return (
+    <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
+      <Icon size={18} />
+    </span>
+  );
+}
+
+function AuthorCell({ owner }) {
+  return (
+    <TableCell>
+      <UserAvatar user={owner} showDetails />
+    </TableCell>
+  );
+}
 
 function FileListView({
   filter,
@@ -23,131 +47,104 @@ function FileListView({
   const showUploader = filter === "sharedWithMe";
 
   return (
-    <div className="rounded-xl border border-gray-200">
-      <table className="w-full table-fixed">
-        <thead className="border-b border-gray-200 bg-gray-50">
-          <tr>
-            <th className="rounded-tl-xl w-auto px-3 py-2 text-left text-xs font-medium text-gray-500 sm:px-4">
-              Name
-            </th>
+    <Table>
+      <TableHeader>
+        <TableRow className="hover:bg-transparent">
+          <TableHead>Name</TableHead>
 
-            {showUploader && (
-              <th className="w-20 px-3 py-2 text-center text-xs font-medium text-gray-500 sm:w-24 sm:px-4">
-                Author
-              </th>
-            )}
+          {showUploader && <TableHead>Author</TableHead>}
 
-            <th className="w-20 px-3 py-2 text-left text-xs font-medium text-gray-500 sm:w-30 sm:px-4">
-              Date
-            </th>
+          <TableHead>Date</TableHead>
 
-            <th className="rounded-tr-xl w-10 sm:w-12" />
-          </tr>
-        </thead>
+          <TableHead className="w-0">
+            <span className="sr-only">Actions</span>
+          </TableHead>
+        </TableRow>
+      </TableHeader>
 
-        <tbody className="divide-y divide-gray-100">
-          {folders.map((folder) => (
-            <tr key={`folder-${folder.id}`} className="hover:bg-gray-50">
-              <td className="min-w-0 px-3 py-2 sm:px-4">
-                <button
-                  type="button"
-                  onClick={() => onOpenFolder(folder.id)}
-                  className="flex min-w-0 w-full items-center gap-2 text-left text-sm text-gray-800 sm:gap-3 cursor-pointer"
-                >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100">
-                    <Folder size={18} className="text-gray-800" />
+      <TableBody>
+        {folders.map((folder) => (
+          <TableRow key={`folder-${folder.id}`}>
+            <TableCell>
+              <button
+                type="button"
+                onClick={() => onOpenFolder(folder.id)}
+                className="flex w-full items-center gap-3"
+              >
+                <ItemIcon icon={Folder} />
+                <span className="truncate font-medium">{folder.name}</span>
+              </button>
+            </TableCell>
+
+            {showUploader && <AuthorCell owner={folder.owner} />}
+
+            <TableCell className="text-muted-foreground">
+              {formatDateMedium(folder.created_at)}
+            </TableCell>
+
+            <TableCell>
+              <ItemMenu
+                itemType="folder"
+                itemId={folder.id}
+                name={folder.name}
+                canEdit={canEdit}
+                onRename={(name) => onRenameFolder(folder.id, name)}
+                onDelete={() => onDeleteFolder(folder.id)}
+              />
+            </TableCell>
+          </TableRow>
+        ))}
+
+        {files.map((file) => (
+          <TableRow key={`file-${file.id}`} className="hover:bg-transparent">
+            <TableCell>
+              <div className="flex gap-3">
+                <ItemIcon icon={getFileIcon(file.extension)} />
+
+                <div>
+                  <span className="block truncate font-medium">
+                    {file.name}
                   </span>
-
-                  <span className="min-w-0 truncate font-medium">
-                    {folder.name}
+                  <span className="text-muted-foreground">
+                    {formatBytes(file.size)}
+                    {file.extension && (
+                      <>
+                        <span className="mx-2">|</span>
+                        {file.extension}
+                      </>
+                    )}
                   </span>
-                </button>
-              </td>
+                </div>
+              </div>
+            </TableCell>
 
-              {showUploader && (
-                <td className="px-3 py-2 text-center sm:px-4">
-                  <UserAvatar user={folder.owner} showDetails />
-                </td>
-              )}
+            {showUploader && <AuthorCell owner={file.owner} />}
 
-              <td className="px-3 py-3 text-left text-sm text-gray-400 sm:px-4">
-                {formatDateMedium(folder.created_at)}
-              </td>
+            <TableCell className="text-muted-foreground">
+              {formatDateMedium(file.uploaded_at)}
+            </TableCell>
 
-              <td className="px-2 py-2 sm:px-4">
-                <ItemMenu
-                  itemType="folder"
-                  itemId={folder.id}
-                  name={folder.name}
-                  canEdit={canEdit}
-                  onRename={(name) => onRenameFolder(folder.id, name)}
-                  onDelete={() => onDeleteFolder(folder.id)}
-                />
-              </td>
-            </tr>
-          ))}
-
-          {files.map((file) => {
-            const FileIcon = getFileIcon(file.extension);
-
-            return (
-              <tr key={`file-${file.id}`}>
-                <td className="min-w-0 px-3 py-3 sm:px-4">
-                  <span className="flex min-w-0 items-center gap-2 sm:gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100">
-                      <FileIcon size={18} className="text-gray-800" />
-                    </span>
-
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-gray-800">
-                        {file.name}
-                      </span>
-                      <span className="block text-sm text-gray-400">
-                        {formatBytes(file.size)}
-                        {file.extension && (
-                          <>
-                            <span className="mx-2">|</span>
-                            {file.extension}
-                          </>
-                        )}
-                      </span>
-                    </span>
-                  </span>
-                </td>
-
-                {showUploader && (
-                  <td className="px-3 py-3 text-center sm:px-4">
-                    <UserAvatar user={file.owner} showDetails />
-                  </td>
-                )}
-
-                <td className="px-3 py-3 text-left text-sm text-gray-400 sm:px-4">
-                  {formatDateMedium(file.uploaded_at)}
-                </td>
-
-                <td className="px-2 py-2 sm:px-4">
-                  <ItemMenu
-                    itemType="file"
-                    itemId={file.id}
-                    name={file.name}
-                    extension={file.extension}
-                    canEdit={canEdit}
-                    onRename={(name) => onRenameFile(file.id, name)}
-                    onDelete={() => onDeleteFile(file.id)}
-                    onDownload={() =>
-                      onDownloadFile(
-                        file.id,
-                        formatFileName(file.name, file.extension),
-                      )
-                    }
-                  />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+            <TableCell>
+              <ItemMenu
+                itemType="file"
+                itemId={file.id}
+                name={file.name}
+                extension={file.extension}
+                canEdit={canEdit}
+                onRename={(name) => onRenameFile(file.id, name)}
+                onDelete={() => onDeleteFile(file.id)}
+                onDownload={() =>
+                  onDownloadFile(
+                    file.id,
+                    formatFileName(file.name, file.extension),
+                  )
+                }
+              />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 

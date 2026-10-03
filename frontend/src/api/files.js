@@ -1,4 +1,4 @@
-import api from "./client";
+import api from "@/api/client";
 
 export async function uploadFile(file, folderId = null) {
   const formData = new FormData();

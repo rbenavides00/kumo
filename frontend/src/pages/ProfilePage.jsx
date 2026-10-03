@@ -1,9 +1,11 @@
-import { useUser } from "../context/UserContext";
-import usePageTitle from "../hooks/usePageTitle";
-import Card from "../components/ui/Card";
-import AvatarUploader from "../components/profile/AvatarUploader";
-import ProfileForm from "../components/profile/ProfileForm";
-import PasswordForm from "../components/profile/PasswordForm";
+import { Page, PageHeader } from "@/components/shared/Page";
+
+import AvatarUploader from "@/components/profile/AvatarUploader";
+import ProfileForm from "@/components/profile/ProfileForm";
+import PasswordForm from "@/components/profile/PasswordForm";
+
+import { useUser } from "@/context/UserContext";
+import usePageTitle from "@/hooks/usePageTitle";
 
 function ProfilePage() {
   usePageTitle("Profile");
@@ -11,34 +13,30 @@ function ProfilePage() {
 
   if (!user) {
     return (
-      <Card>
-        <Card.Body>
-          <p className="text-sm text-gray-500">Loading profile...</p>
-        </Card.Body>
-      </Card>
+      <Page>
+        <p className="text-sm text-muted-foreground">Loading profile...</p>
+      </Page>
     );
   }
 
   return (
-    <Card>
-      <Card.Header title="Profile" subtitle="Manage your account settings." />
+    <Page>
+      <PageHeader title="Profile" description="Manage your account settings." />
 
-      <Card.Body className="flex flex-col gap-8">
-        <AvatarUploader
-          user={user}
-          avatarUrl={avatarUrl}
-          onUpdated={refreshUser}
-        />
+      <AvatarUploader
+        user={user}
+        avatarUrl={avatarUrl}
+        onUpdated={refreshUser}
+      />
 
-        <ProfileForm
-          initialFirstName={user.first_name}
-          initialLastName={user.last_name}
-          onUpdated={refreshUser}
-        />
+      <ProfileForm
+        initialFirstName={user.first_name}
+        initialLastName={user.last_name}
+        onUpdated={refreshUser}
+      />
 
-        <PasswordForm />
-      </Card.Body>
-    </Card>
+      <PasswordForm />
+    </Page>
   );
 }
 

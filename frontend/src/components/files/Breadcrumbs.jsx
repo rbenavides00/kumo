@@ -1,30 +1,67 @@
+import { Fragment } from "react";
 import { Home } from "lucide-react";
 
-function Breadcrumbs({ path, onNavigate }) {
-  return (
-    <nav className="flex flex-wrap items-center gap-1 text-sm text-gray-500">
-      <button
-        type="button"
-        onClick={() => onNavigate(null)}
-        className="flex items-center gap-1 rounded px-1.5 py-1 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer"
-      >
-        <Home size={14} />
-        <span>Home</span>
-      </button>
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
-      {path.map((folder) => (
-        <span key={folder.id} className="flex items-center gap-1">
-          <span className="text-gray-300">/</span>
-          <button
-            type="button"
-            onClick={() => onNavigate(folder.id)}
-            className="rounded px-1.5 py-1 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer"
-          >
-            {folder.name}
-          </button>
-        </span>
-      ))}
-    </nav>
+function Breadcrumbs({ path, onNavigate }) {
+  const isRoot = path.length === 0;
+
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          {isRoot ? (
+            <BreadcrumbPage className="flex items-center gap-1">
+              <Home className="size-3.5" />
+              Home
+            </BreadcrumbPage>
+          ) : (
+            <BreadcrumbLink
+              render={<button type="button" onClick={() => onNavigate(null)} />}
+              className="flex cursor-pointer items-center gap-1"
+            >
+              <Home className="size-3.5" />
+              Home
+            </BreadcrumbLink>
+          )}
+        </BreadcrumbItem>
+
+        {path.map((folder, index) => {
+          const isLast = index === path.length - 1;
+
+          return (
+            <Fragment key={folder.id}>
+              <BreadcrumbSeparator />
+
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage>{folder.name}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink
+                    render={
+                      <button
+                        type="button"
+                        onClick={() => onNavigate(folder.id)}
+                      />
+                    }
+                    className="cursor-pointer"
+                  >
+                    {folder.name}
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </Fragment>
+          );
+        })}
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }
 

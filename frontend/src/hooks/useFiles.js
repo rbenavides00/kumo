@@ -1,79 +1,85 @@
 import { useEffect, useState } from "react";
 
-import { getSettings } from "../utils/settings";
-import * as foldersApi from "../api/folders";
-import * as filesApi from "../api/files";
+import { getSettings } from "@/utils/settings";
+import * as foldersApi from "@/api/folders";
+import * as filesApi from "@/api/files";
+
+const NO_CONTENTS = { folders: [], files: [], totalPages: 1 };
 
 function useFiles() {
   // State
   const [filter, setFilterState] = useState(() => getSettings().filesFilter);
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [path, setPath] = useState([]);
-  const [folders, setFolders] = useState([]);
-  const [files, setFiles] = useState([]);
-  const [page, setPageState] = useState(1);
+  const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPageState] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [reloadCount, setReloadCount] = useState(0);
+
+  // Results, tagged with the query they belong to
+  const [contents, setContents] = useState({
+    key: null,
+    ...NO_CONTENTS,
+    error: null,
+  });
+  const [actionError, setActionError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Data loading
-  const loadContents = async (
-    folderId,
-    activeFilter = filter,
-    activePage = page,
-    activeRowsPerPage = rowsPerPage,
-  ) => {
-    setIsLoading(true);
-    setError(null);
+  // Derived state
+  const key = `${currentFolderId}|${filter}|${page}|${rowsPerPage}`;
+  const isLoading = contents.key !== key;
+  const { folders, files, totalPages } = contents;
 
-    try {
-      const data = await foldersApi.getContents(
-        folderId,
-        activeFilter,
-        activePage,
-        activeRowsPerPage,
-      );
-
-      setFolders(data.folders);
-      setFiles(data.files);
-      setTotalPages(data.pagination.totalPages);
-    } catch {
-      setError("Could not load files.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadContents(currentFolderId, filter, page, rowsPerPage);
-  }, [currentFolderId, filter, page, rowsPerPage]);
+  // Action errors only show for the query where they happened
+  const loadError = isLoading ? null : contents.error;
+  const error = actionError?.key === key ? actionError.message : loadError;
 
   const isEmpty = !isLoading && folders.length === 0 && files.length === 0;
 
+  // Data loading
+  useEffect(() => {
+    let cancelled = false;
+
+    foldersApi
+      .getContents(currentFolderId, filter, page, rowsPerPage)
+      .then((data) => {
+        if (cancelled) return;
+        setContents({
+          key,
+          folders: data.folders,
+          files: data.files,
+          totalPages: data.pagination.totalPages,
+          error: null,
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setContents({ key, ...NO_CONTENTS, error: "Could not load files." });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [key, currentFolderId, filter, page, rowsPerPage, reloadCount]);
+
+  const reload = () => setReloadCount((count) => count + 1);
+  const fail = (message) => setActionError({ key, message });
+
+  // Navigation
   const setFilter = (newFilter) => {
     setPath([]);
     setCurrentFolderId(null);
-    setFolders([]);
-    setFiles([]);
-    setPageState(1);
+    setPage(1);
     setFilterState(newFilter);
-  };
-
-  const setPage = (newPage) => {
-    setPageState(newPage);
   };
 
   const setRowsPerPage = (newRowsPerPage) => {
     setRowsPerPageState(newRowsPerPage);
-    setPageState(1);
+    setPage(1);
   };
 
-  // Navigation
   const openFolder = (folder) => {
     setPath((prevPath) => [...prevPath, { id: folder.id, name: folder.name }]);
-    setPageState(1);
+    setPage(1);
     setCurrentFolderId(folder.id);
   };
 
@@ -83,7 +89,7 @@ function useFiles() {
   };
 
   const navigateToFolder = (folderId) => {
-    setPageState(1);
+    setPage(1);
 
     if (folderId === null) {
       setPath([]);
@@ -100,33 +106,33 @@ function useFiles() {
   // Folder actions
   const createFolder = async (name) => {
     await foldersApi.createFolder(name, currentFolderId);
-    await loadContents(currentFolderId);
+    reload();
   };
 
   const renameFolder = async (folderId, name) => {
     await foldersApi.renameFolder(folderId, name);
-    await loadContents(currentFolderId);
+    reload();
   };
 
   const deleteFolder = async (folderId) => {
     try {
       await foldersApi.deleteFolder(folderId);
-      await loadContents(currentFolderId);
+      reload();
     } catch (err) {
-      setError(err.response?.data?.error ?? "Could not delete folder.");
+      fail(err.response?.data?.error ?? "Could not delete folder.");
     }
   };
 
   // File actions
   const uploadFile = async (file) => {
     setIsUploading(true);
-    setError(null);
+    setActionError(null);
 
     try {
       await filesApi.uploadFile(file, currentFolderId);
-      await loadContents(currentFolderId);
+      reload();
     } catch {
-      setError("Could not upload file.");
+      fail("Could not upload file.");
     } finally {
       setIsUploading(false);
     }
@@ -134,15 +140,15 @@ function useFiles() {
 
   const renameFile = async (fileId, name) => {
     await filesApi.renameFile(fileId, name);
-    await loadContents(currentFolderId);
+    reload();
   };
 
   const deleteFile = async (fileId) => {
     try {
       await filesApi.deleteFile(fileId);
-      await loadContents(currentFolderId);
+      reload();
     } catch (err) {
-      setError(err.response?.data?.error ?? "Could not delete file.");
+      fail(err.response?.data?.error ?? "Could not delete file.");
     }
   };
 
@@ -150,7 +156,7 @@ function useFiles() {
     try {
       await filesApi.downloadFile(fileId, fileName);
     } catch (err) {
-      setError(err.response?.data?.error ?? "Could not download file.");
+      fail(err.response?.data?.error ?? "Could not download file.");
     }
   };
 

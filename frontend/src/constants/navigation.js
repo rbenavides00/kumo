@@ -1,7 +1,7 @@
 import { FileText, House, Settings } from "lucide-react";
 
 export const NAV_ITEMS = [
-  { id: "home", icon: House, text: "Home", to: "/" },
-  { id: "files", icon: FileText, text: "Files", to: "/files" },
-  { id: "settings", icon: Settings, text: "Settings", to: "/settings" },
+  { id: "home", icon: House, title: "Home", url: "/" },
+  { id: "files", icon: FileText, title: "Files", url: "/files" },
+  { id: "settings", icon: Settings, title: "Settings", url: "/settings" },
 ];

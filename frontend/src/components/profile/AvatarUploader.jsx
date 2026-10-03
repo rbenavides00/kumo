@@ -1,8 +1,11 @@
 import { useRef, useState } from "react";
 import { Camera } from "lucide-react";
 
-import Avatar from "../ui/Avatar";
-import * as usersApi from "../../api/users";
+import { Button } from "@/components/ui/button";
+import { PageSection } from "@/components/shared/Page";
+import UserAvatar from "@/components/shared/UserAvatar";
+
+import * as usersApi from "@/api/users";
 
 function AvatarUploader({ user, avatarUrl, onUpdated }) {
   const [error, setError] = useState(null);
@@ -28,23 +31,27 @@ function AvatarUploader({ user, avatarUrl, onUpdated }) {
   };
 
   return (
-    <div className="flex items-center gap-4">
+    <PageSection className="flex items-center gap-4">
       <div className="relative">
-        <Avatar user={user} avatarUrl={avatarUrl} size="md" />
+        <UserAvatar user={user} src={avatarUrl} className="size-20" />
 
-        <button
+        <Button
           type="button"
+          size="icon"
+          aria-label="Change profile photo"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="absolute right-0 bottom-0 cursor-pointer rounded-full bg-gray-900 p-1.5 text-white hover:bg-gray-800 disabled:opacity-60"
+          className="absolute right-0 bottom-0 size-8 rounded-full border"
         >
-          <Camera size={14} />
-        </button>
+          <Camera />
+        </Button>
       </div>
 
       <div>
-        <p className="text-sm font-medium text-gray-700">Profile photo</p>
-        <p className="text-xs text-gray-500">JPG, PNG or WEBP. Max 5MB.</p>
+        <p className="text-sm font-medium">Profile photo</p>
+        <p className="text-xs text-muted-foreground">
+          JPG, PNG or WEBP. Max 5MB.
+        </p>
         {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
       </div>
 
@@ -55,7 +62,7 @@ function AvatarUploader({ user, avatarUrl, onUpdated }) {
         onChange={handleFileSelected}
         className="hidden"
       />
-    </div>
+    </PageSection>
   );
 }
 

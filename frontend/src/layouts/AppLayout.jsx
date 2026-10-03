@@ -1,44 +1,31 @@
-import { useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
-import { useAuth } from "../context/AuthContext";
-import MobileHeader from "../components/shell/MobileHeader";
-import Sidebar from "../components/shell/sidebar/Sidebar";
-import { NAV_ITEMS } from "../constants/navigation";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+
+import AppSidebar from "@/layouts/sidebar/AppSidebar";
 
 const APP_TITLE = "KUMO";
 
 function AppLayout() {
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const { logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSignOut = () => {
-    logout();
-    navigate("/login", { replace: true });
-  };
-
   return (
-    <main className="flex h-screen overflow-hidden bg-gray-100">
-      <Sidebar
-        title={APP_TITLE}
-        items={NAV_ITEMS}
-        isMobileOpen={isMobileSidebarOpen}
-        onCloseMobile={() => setIsMobileSidebarOpen(false)}
-        onSignOut={handleSignOut}
-      />
+    <SidebarProvider>
+      <AppSidebar title={APP_TITLE} />
 
-      <section className="flex flex-1 flex-col overflow-hidden">
-        <MobileHeader
-          title={APP_TITLE}
-          onOpenSidebar={() => setIsMobileSidebarOpen(true)}
-        />
+      <SidebarInset>
+        <header className="flex items-center gap-2 border-b p-2 md:hidden">
+          <SidebarTrigger />
+          <span className="font-bold">{APP_TITLE}</span>
+        </header>
 
-        <div className="flex-1 overflow-auto p-4 md:pl-0">
+        <main className="flex flex-1 flex-col gap-4 p-4">
           <Outlet />
-        </div>
-      </section>
-    </main>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 

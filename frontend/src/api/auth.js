@@ -1,4 +1,4 @@
-import api from "./client";
+import api from "@/api/client";
 
 export async function login(username, password) {
   return api.post("/auth/login", { username, password }).then((res) => res.data);

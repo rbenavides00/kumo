@@ -1,96 +1,123 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-import { useAuth } from "../../context/AuthContext";
-import usePageTitle from "../../hooks/usePageTitle";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+
+import { useAuth } from "@/context/AuthContext";
+import usePageTitle from "@/hooks/usePageTitle";
+
+const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
 
 function LoginPage() {
   usePageTitle("Login");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
+  const form = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  const {
+    register,
+    handleSubmit,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting },
+  } = form;
+
+  const onSubmit = async ({ username, password }) => {
+    clearErrors("root");
 
     try {
-      // await new Promise((resolve) => setTimeout(resolve, 1500));
+      // await new Promise((resolve) => setTimeout(resolve, 3000));
       await login(username, password);
       navigate("/", { replace: true });
     } catch (err) {
-      setError(
-        err.response?.data?.error ?? "Could not log in. Please try again.",
-      );
-    } finally {
-      setIsSubmitting(false);
+      setError("root", {
+        type: "server",
+        message:
+          err.response?.data?.error ?? "Could not log in. Please try again.",
+      });
     }
   };
 
   return (
-    <div className="rounded-2xl bg-white p-8 shadow-md">
-      <h1 className="text-2xl font-bold">Welcome back</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        Sign in to access your files.
-      </p>
+    <Card>
+      <CardHeader>
+        <CardTitle>Welcome back</CardTitle>
+        <CardDescription>
+          Enter your credentials below to log in to your account.
+        </CardDescription>
+      </CardHeader>
 
-      <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-        <div>
-          <label
-            htmlFor="username"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Username
-          </label>
-          <input
-            id="username"
-            type="text"
-            autoComplete="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
-          />
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <CardContent className="pb-6">
+          <FieldGroup>
+            <Field data-invalid={!!errors.username}>
+              <FieldLabel htmlFor="username">Username</FieldLabel>
 
-        <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
-          />
-        </div>
+              <Input
+                {...register("username")}
+                id="username"
+                autoComplete="username"
+                aria-invalid={!!errors.username}
+                disabled={isSubmitting}
+              />
 
-        {error && (
-          <p className="text-sm text-red-500" role="alert">
-            {error}
-          </p>
-        )}
+              <FieldError errors={[errors.username]} />
+            </Field>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="mt-2 rounded-lg bg-gray-900 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-60"
-        >
-          {isSubmitting ? "Signing in..." : "Sign in"}
-        </button>
+            <Field data-invalid={!!errors.password}>
+              <FieldLabel htmlFor="password">Password</FieldLabel>
+
+              <Input
+                {...register("password")}
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                aria-invalid={!!errors.password}
+                disabled={isSubmitting}
+              />
+
+              <FieldError errors={[errors.password]} />
+            </Field>
+
+            <FieldError errors={[errors.root]} />
+          </FieldGroup>
+        </CardContent>
+
+        <CardFooter>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Logging in..." : "Login"}
+          </Button>
+        </CardFooter>
       </form>
-    </div>
+    </Card>
   );
 }
 
