@@ -1,11 +1,11 @@
 info:
-  name: Ping
+  name: Get dashboard stats
   type: http
-  seq: 5
+  seq: 1
 
 http:
   method: GET
-  url: "{{url}}/ping"
+  url: "{{url}}/dashboard/"
   auth: inherit
 
 settings:
@@ -13,4 +13,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
-  forwardAuthorizationHeader: false
+  forwardAuthorizationHeader: true

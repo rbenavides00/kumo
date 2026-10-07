@@ -153,8 +153,8 @@ function useFiles() {
     try {
       await filesApi.uploadFile(file, currentFolderId);
       reload();
-    } catch {
-      fail("Could not upload file.");
+    } catch (err: unknown) {
+      fail(getErrorMessage(err, "Could not upload file."));
     } finally {
       setIsUploading(false);
     }

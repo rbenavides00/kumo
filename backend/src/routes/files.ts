@@ -1,13 +1,17 @@
-import { Router } from "express";
 import path from "node:path";
 import fs from "node:fs";
+
+import { Router } from "express";
 import type { CreatedFile } from "@kumo/shared";
 
 import db from "../db/database.js";
 import type { FileRow } from "../db/rows.js";
+import { STORAGE_QUOTA_BYTES } from "../config.js";
 import authMiddleware from "../middleware/auth.js";
 import filesUpload from "../middleware/storage/fileStorage.js";
 import * as access from "../utils/access.js";
+import { getFileCategory } from "../utils/fileCategories.js";
+import { getUsedStorage } from "../utils/storage.js";
 
 const router = Router();
 
@@ -45,9 +49,18 @@ router.post(
 
     const { originalname, filename, size } = uploadedFile;
 
+    if (
+      STORAGE_QUOTA_BYTES !== null &&
+      getUsedStorage(req.user.id) + size > STORAGE_QUOTA_BYTES
+    ) {
+      discardUpload();
+      return res.status(413).json({ error: "Storage quota exceeded" });
+    }
+
     const folderId = req.body.folderId ? Number(req.body.folderId) : null;
 
     const { name, extension } = splitFileName(originalname);
+    const category = getFileCategory(extension);
 
     if (folderId !== null) {
       const folder = db
@@ -103,6 +116,7 @@ router.post(
       id: Number(result.lastInsertRowid),
       name,
       extension,
+      category,
       folderId,
       size,
     };

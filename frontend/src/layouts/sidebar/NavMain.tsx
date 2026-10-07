@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
-import { FileText, House, Settings } from "lucide-react";
+import { FileText, LayoutDashboard, Settings } from "lucide-react";
 
 import {
   SidebarGroup,
@@ -18,7 +18,13 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "home", icon: House, title: "Home", url: "/" },
+  // { id: "home", icon: House, title: "Home", url: "/" },
+  {
+    id: "dashboard",
+    icon: LayoutDashboard,
+    title: "Dashboard",
+    url: "/dashboard",
+  },
   { id: "files", icon: FileText, title: "Files", url: "/files" },
   { id: "settings", icon: Settings, title: "Settings", url: "/settings" },
 ];

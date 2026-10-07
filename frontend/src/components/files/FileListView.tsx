@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { Folder, type LucideIcon } from "lucide-react";
 
 import type { ContentFilter, FileItem, FolderItem, User } from "@kumo/shared";
@@ -14,9 +15,8 @@ import {
 } from "@/components/ui/table";
 
 import { formatBytes } from "@/utils/formatBytes";
-import { formatDateMedium } from "@/utils/formatDate";
 import { formatFileName } from "@/utils/formatFileName";
-import { getFileIcon } from "@/utils/getFileIcon";
+import { CATEGORY_META } from "@/utils/fileCategories";
 
 type ItemIconProps = {
   icon: LucideIcon;
@@ -101,7 +101,7 @@ function FileListView({
             {showUploader && <AuthorCell owner={folder.owner} />}
 
             <TableCell className="text-muted-foreground">
-              {formatDateMedium(folder.createdAt)}
+              {format(new Date(folder.createdAt), "MMM d, yyyy")}
             </TableCell>
 
             <TableCell>
@@ -117,56 +117,60 @@ function FileListView({
           </TableRow>
         ))}
 
-        {files.map((file) => (
-          <TableRow key={`file-${file.id}`} className="hover:bg-transparent">
-            <TableCell>
-              <div className="flex gap-3">
-                <ItemIcon icon={getFileIcon(file.extension)} />
+        {files.map((file) => {
+          const { icon: FileIcon } = CATEGORY_META[file.category];
 
-                <div>
-                  <span className="block truncate font-medium">
-                    {file.name}
-                  </span>
+          return (
+            <TableRow key={`file-${file.id}`} className="hover:bg-transparent">
+              <TableCell>
+                <div className="flex gap-3">
+                  <ItemIcon icon={FileIcon} />
 
-                  <span className="text-muted-foreground">
-                    {formatBytes(file.size)}
+                  <div>
+                    <span className="block truncate font-medium">
+                      {file.name}
+                    </span>
 
-                    {file.extension && (
-                      <>
-                        <span className="mx-2">|</span>
-                        {file.extension}
-                      </>
-                    )}
-                  </span>
+                    <span className="text-muted-foreground">
+                      {formatBytes(file.size)}
+
+                      {file.extension && (
+                        <>
+                          <span className="mx-2">|</span>
+                          {file.extension}
+                        </>
+                      )}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </TableCell>
+              </TableCell>
 
-            {showUploader && <AuthorCell owner={file.owner} />}
+              {showUploader && <AuthorCell owner={file.owner} />}
 
-            <TableCell className="text-muted-foreground">
-              {formatDateMedium(file.uploadedAt)}
-            </TableCell>
+              <TableCell className="text-muted-foreground">
+                {format(new Date(file.uploadedAt), "MMM d, yyyy")}
+              </TableCell>
 
-            <TableCell>
-              <ItemMenu
-                itemType="file"
-                itemId={file.id}
-                name={file.name}
-                extension={file.extension}
-                canEdit={canEdit}
-                onRename={(name) => onRenameFile(file.id, name)}
-                onDelete={() => onDeleteFile(file.id)}
-                onDownload={() =>
-                  onDownloadFile(
-                    file.id,
-                    formatFileName(file.name, file.extension),
-                  )
-                }
-              />
-            </TableCell>
-          </TableRow>
-        ))}
+              <TableCell>
+                <ItemMenu
+                  itemType="file"
+                  itemId={file.id}
+                  name={file.name}
+                  extension={file.extension}
+                  canEdit={canEdit}
+                  onRename={(name) => onRenameFile(file.id, name)}
+                  onDelete={() => onDeleteFile(file.id)}
+                  onDownload={() =>
+                    onDownloadFile(
+                      file.id,
+                      formatFileName(file.name, file.extension),
+                    )
+                  }
+                />
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );

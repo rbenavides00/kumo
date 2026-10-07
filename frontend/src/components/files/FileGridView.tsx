@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatBytes } from "@/utils/formatBytes";
 import { formatFileName } from "@/utils/formatFileName";
-import { getFileIcon } from "@/utils/getFileIcon";
+import { CATEGORY_META } from "@/utils/fileCategories";
 
 const contentClass =
   "flex w-full flex-col items-center gap-3 px-4 pt-8 pb-5 text-center";
@@ -121,49 +121,53 @@ function FileGridView({
         </ItemCard>
       ))}
 
-      {files.map((file) => (
-        <ItemCard
-          key={`file-${file.id}`}
-          owner={file.owner}
-          showOwner={showOwner}
-          menu={
-            <ItemMenu
-              itemType="file"
-              itemId={file.id}
-              name={file.name}
-              extension={file.extension}
-              canEdit={canEdit}
-              onRename={(name) => onRenameFile(file.id, name)}
-              onDelete={() => onDeleteFile(file.id)}
-              onDownload={() =>
-                onDownloadFile(
-                  file.id,
-                  formatFileName(file.name, file.extension),
-                )
-              }
-            />
-          }
-        >
-          <div className={contentClass}>
-            <ItemIcon icon={getFileIcon(file.extension)} />
+      {files.map((file) => {
+        const { icon: FileIcon } = CATEGORY_META[file.category];
 
-            <div className="w-full min-w-0">
-              <p className="truncate text-sm font-medium">{file.name}</p>
+        return (
+          <ItemCard
+            key={`file-${file.id}`}
+            owner={file.owner}
+            showOwner={showOwner}
+            menu={
+              <ItemMenu
+                itemType="file"
+                itemId={file.id}
+                name={file.name}
+                extension={file.extension}
+                canEdit={canEdit}
+                onRename={(name) => onRenameFile(file.id, name)}
+                onDelete={() => onDeleteFile(file.id)}
+                onDownload={() =>
+                  onDownloadFile(
+                    file.id,
+                    formatFileName(file.name, file.extension),
+                  )
+                }
+              />
+            }
+          >
+            <div className={contentClass}>
+              <ItemIcon icon={FileIcon} />
 
-              <p className="text-xs text-muted-foreground">
-                {formatBytes(file.size)}
+              <div className="w-full min-w-0">
+                <p className="truncate text-sm font-medium">{file.name}</p>
 
-                {file.extension && (
-                  <>
-                    <span className="mx-1.5">|</span>
-                    {file.extension}
-                  </>
-                )}
-              </p>
+                <p className="text-xs text-muted-foreground">
+                  {formatBytes(file.size)}
+
+                  {file.extension && (
+                    <>
+                      <span className="mx-1.5">|</span>
+                      {file.extension}
+                    </>
+                  )}
+                </p>
+              </div>
             </div>
-          </div>
-        </ItemCard>
-      ))}
+          </ItemCard>
+        );
+      })}
     </div>
   );
 }

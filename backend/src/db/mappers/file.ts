@@ -2,6 +2,7 @@ import type { FileItem, User, ShareStatus } from "@kumo/shared";
 
 import type { FileListRow } from "../../db/rows.js";
 import { toIsoDate } from "./date.js";
+import { getFileCategory } from "../../utils/fileCategories.js";
 
 export function toFileItem(
   row: FileListRow,
@@ -12,6 +13,7 @@ export function toFileItem(
     id: row.id,
     name: row.name,
     extension: row.extension,
+    category: getFileCategory(row.extension),
     size: row.size,
     isPublic: Boolean(row.is_public),
     folderId: row.folder_id,

@@ -7,7 +7,8 @@ import AppLayout from "@/layouts/AppLayout";
 import AuthLayout from "@/layouts/AuthLayout";
 
 import LoginPage from "@/pages/auth/LoginPage";
-import HomePage from "@/pages/HomePage";
+// import HomePage from "@/pages/HomePage";
+import DashboardPage from "./pages/DashboardPage";
 import FilesPage from "@/pages/FilesPage";
 import SettingsPage from "@/pages/SettingsPage";
 import ProfilePage from "@/pages/ProfilePage";
@@ -24,7 +25,9 @@ function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
-                <Route path="/" element={<HomePage />} />
+                {/* <Route path="/" element={<HomePage />} /> */}
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/files" element={<FilesPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
