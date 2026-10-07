@@ -3,7 +3,9 @@
 > **Self-hosted cloud storage for managing, organizing, and sharing files.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](#license)
-[![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)](https://nodejs.org/)[![Express](https://img.shields.io/badge/Express-000000?logo=express&logoColor=white)](https://expressjs.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-000000?logo=express&logoColor=white)](https://expressjs.com/)
 [![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![pnpm](https://img.shields.io/badge/pnpm-2D3748?logo=pnpm&logoColor=white)](https://pnpm.io/)
 
@@ -19,21 +21,25 @@ sharing for authenticated users.
 
 - React + Vite
 - React Router
-- Tailwind CSS
+- Tailwind CSS + shadcn/ui
 - Axios
-- Vitest + React Testing Library
 
 ### Backend
 
 - Node.js + Express
 - SQLite + better-sqlite3
 - JWT authentication
-- Multer
+- Multer + Sharp
+
+### Shared
+
+- TypeScript types shared between frontend and backend
 
 ### Development
 
 - Bruno for API testing
 - pnpm
+- ESLint
 
 ## Features
 
@@ -50,21 +56,31 @@ sharing for authenticated users.
   - **My Files**: shows items owned by the current user
   - **Shared with Me**: shows items shared with the current user, either directly or through public access
 - User profiles with name, avatar, and password management
+- Light, dark, and system themes
+- Configurable default Files view and filter
 
 ## Architecture
 
-Kumo is split into two applications:
+Kumo is a pnpm monorepo with three packages:
 
 ```text
 .
 ├── backend/          # REST API, authentication, database and file storage
 ├── frontend/         # React application
+├── shared/           # Types shared by frontend and backend (@kumo/shared)
 └── bruno/            # API collection for development and testing
 ```
 
-The frontend communicates with the backend through a REST API. The backend handles authentication, authorization, file operations, sharing rules, and persistence.
+The frontend communicates with the backend through a REST API served under the
+`/api` prefix. The backend handles authentication, authorization, file
+operations, sharing rules, and persistence.
 
-Uploaded files, avatars, and the SQLite database are stored locally and are excluded from version control.
+Frontend and backend share a single origin: in development, the Vite dev server
+proxies `/api` to the backend, and in production a reverse proxy (Caddy, Nginx,
+etc.) should do the same. This removes the need for CORS configuration.
+
+Uploaded files, avatars, and the SQLite database are stored locally in
+`backend/storage/` and are excluded from version control.
 
 ## Project Structure
 
@@ -73,18 +89,25 @@ backend/
 └── src/
     ├── routes/       # API endpoints
     ├── middleware/   # Authentication and upload middleware
+    ├── db/           # Database connection, schema, rows and mappers
     ├── utils/        # Access control and shared utilities
-    └── db.js         # Database connection and schema
+    ├── app.ts        # Express app (middleware and routes)
+    └── index.ts      # Server entry point
 
 frontend/
 └── src/
     ├── api/          # API clients organized by resource
-    ├── components/   # Reusable and feature-specific components
+    ├── components/   # shadcn/ui primitives and feature components
     ├── context/      # Application contexts
     ├── hooks/        # Shared application logic
     ├── layouts/      # Application layouts
     ├── pages/        # Route-level components
+    ├── routes/       # Route guards
     └── utils/        # Formatting and helper functions
+
+shared/
+└── src/
+    └── types/        # Types for API payloads and entities
 
 bruno/
 └── ...               # API requests organized by resource
@@ -97,63 +120,54 @@ bruno/
 - Node.js
 - pnpm
 
-### 1. Clone the repository
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/rbenavides00/kumo
 cd kumo
-```
-
-### 2. Start the backend
-
-```bash
-cd backend
 pnpm install
 ```
 
-Copy `.env.example` to `.env` and update the environment variables as needed:
+### 2. Configure the backend
+
+Copy `backend/.env.example` to `backend/.env` and update the values:
 
 ```env
 PORT=3001
 JWT_SECRET=your-secret-here
 ```
 
-Start the development server:
+### 3. Start the app
+
+From the repository root:
 
 ```bash
 pnpm dev
 ```
 
-The API runs on `http://localhost:3001` by default.
+This starts both apps in parallel:
 
-On the first run, Kumo automatically creates the SQLite database and required storage directories.
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:3001` (reached through the frontend at `/api`)
 
-### 3. Start the frontend
+On the first run, Kumo automatically creates the SQLite database and required
+storage directories.
 
-In a separate terminal:
+## Scripts
 
-```bash
-cd frontend
-pnpm install
-pnpm dev
-```
+Run from the repository root:
 
-The frontend runs on `http://localhost:5173` by default.
-
-## Testing
-
-Frontend tests use Vitest and React Testing Library.
-
-```bash
-cd frontend
-pnpm test
-```
-
-Tests are co-located with the code they cover.
+| Command          | Description                              |
+| ---------------- | ---------------------------------------- |
+| `pnpm dev`       | Start frontend and backend in watch mode |
+| `pnpm build`     | Build all packages                       |
+| `pnpm typecheck` | Type-check all packages                  |
+| `pnpm lint`      | Lint the frontend                        |
 
 ## API Testing
 
 A [Bruno](https://www.usebruno.com/) collection is included in `bruno/` for testing the REST API.
+Select the **Localhost** environment, whose base URL points to `http://localhost:3001/api`.
 
 Requests are organized by resource, including:
 
