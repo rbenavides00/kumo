@@ -16,6 +16,7 @@ import {
 import { useDashboard } from "@/hooks/useDashboard";
 import usePageTitle from "@/hooks/usePageTitle";
 import { formatBytes } from "@/utils/formatBytes";
+import { Button } from "@/components/ui/button";
 
 const SHARING_META: Record<ShareStatus, { label: string; color: string }> = {
   private: { label: "Private", color: "var(--chart-1)" },
@@ -216,7 +217,7 @@ function SharingCard({ sharing }: { sharing: DashboardData["sharing"] }) {
 function DashboardPage() {
   usePageTitle("Dashboard");
 
-  const state = useDashboard();
+  const { state, retry } = useDashboard();
 
   return (
     <Page>
@@ -228,9 +229,12 @@ function DashboardPage() {
       {state.status === "loading" && <DashboardSkeleton />}
 
       {state.status === "error" && (
-        <p className="text-sm text-destructive">
-          Could not load the dashboard.
-        </p>
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          <p className="text-sm text-muted-foreground">{state.message}</p>
+          <Button variant="outline" onClick={retry}>
+            Try again
+          </Button>
+        </div>
       )}
 
       {state.status === "ready" && (

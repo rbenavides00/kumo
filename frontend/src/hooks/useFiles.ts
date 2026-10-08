@@ -3,8 +3,8 @@ import type { ContentFilter, FileItem, FolderItem } from "@kumo/shared";
 
 import * as filesApi from "@/api/files";
 import * as foldersApi from "@/api/folders";
-import { getErrorMessage } from "@/api/errors";
 import { readPreference } from "@/hooks/useLocalStorage";
+import { notify } from "@/utils/notify";
 import { FILES_FILTER } from "@/utils/preferences";
 
 export type PathItem = Pick<FolderItem, "id" | "name">;
@@ -84,7 +84,6 @@ function useFiles() {
   }, [key, currentFolderId, filter, page, rowsPerPage, reloadCount]);
 
   const reload = () => setReloadCount((count) => count + 1);
-  const fail = (message: string) => setActionError({ key, message });
 
   // Navigation
   const setFilter = (newFilter: ContentFilter) => {
@@ -127,21 +126,32 @@ function useFiles() {
 
   // Folder actions
   const createFolder = async (name: string) => {
-    await foldersApi.createFolder(name, currentFolderId);
-    reload();
+    try {
+      await foldersApi.createFolder(name, currentFolderId);
+      reload();
+      notify.success("Folder created successfully.");
+    } catch (err) {
+      notify.error(err, "Could not create folder.");
+    }
   };
 
   const renameFolder = async (folderId: number, name: string) => {
-    await foldersApi.renameFolder(folderId, name);
-    reload();
+    try {
+      await foldersApi.renameFolder(folderId, name);
+      reload();
+      notify.success("Folder renamed successfully.");
+    } catch (err) {
+      notify.error(err, "Could not rename folder.");
+    }
   };
 
   const deleteFolder = async (folderId: number) => {
     try {
       await foldersApi.deleteFolder(folderId);
       reload();
+      notify.success("Folder deleted successfully.");
     } catch (err) {
-      fail(getErrorMessage(err, "Could not delete folder."));
+      notify.error(err, "Could not delete folder.");
     }
   };
 
@@ -153,24 +163,31 @@ function useFiles() {
     try {
       await filesApi.uploadFile(file, currentFolderId);
       reload();
+      notify.success("File uploaded successfully.");
     } catch (err: unknown) {
-      fail(getErrorMessage(err, "Could not upload file."));
+      notify.error(err, "Could not upload file.");
     } finally {
       setIsUploading(false);
     }
   };
 
   const renameFile = async (fileId: number, name: string) => {
-    await filesApi.renameFile(fileId, name);
-    reload();
+    try {
+      await filesApi.renameFile(fileId, name);
+      reload();
+      notify.success("File renamed successfully.");
+    } catch (err) {
+      notify.error(err, "Could not rename file.");
+    }
   };
 
   const deleteFile = async (fileId: number) => {
     try {
       await filesApi.deleteFile(fileId);
       reload();
+      notify.success("File deleted successfully.");
     } catch (err) {
-      fail(getErrorMessage(err, "Could not delete file."));
+      notify.error(err, "Could not delete file.");
     }
   };
 
@@ -178,7 +195,7 @@ function useFiles() {
     try {
       await filesApi.downloadFile(fileId, fileName);
     } catch (err) {
-      fail(getErrorMessage(err, "Could not download file."));
+      notify.error(err, "Could not download file.");
     }
   };
 

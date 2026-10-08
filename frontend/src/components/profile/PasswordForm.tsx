@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 import * as usersApi from "@/api/users";
-import { getErrorMessage } from "@/api/errors";
+import { notify } from "@/utils/notify";
 
 const passwordSchema = z
   .object({
@@ -75,33 +74,23 @@ function PasswordField({
 }
 
 function PasswordForm() {
-  const [success, setSuccess] = useState(false);
-
   const {
     register,
     handleSubmit,
     reset,
-    setError,
-    clearErrors,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(passwordSchema),
     defaultValues,
   });
 
   const onSubmit = async ({ currentPassword, newPassword }: FormValues) => {
-    clearErrors("root");
-    setSuccess(false);
-
     try {
       await usersApi.updatePassword(currentPassword, newPassword);
       reset(defaultValues);
-      setSuccess(true);
-    } catch (error: unknown) {
-      setError("root", {
-        type: "server",
-        message: getErrorMessage(error, "Could not update password"),
-      });
+      notify.success("Password updated successfully.");
+    } catch (err: unknown) {
+      notify.error(err, "Could not update password.");
     }
   };
 
@@ -135,14 +124,6 @@ function PasswordForm() {
             />
           </div>
         </FieldGroup>
-
-        <FieldError errors={[errors.root]} />
-
-        {success && !isDirty && (
-          <p className="text-sm text-green-600 dark:text-green-500">
-            Password updated
-          </p>
-        )}
 
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Updating..." : "Update password"}

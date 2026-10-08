@@ -17,7 +17,7 @@ import {
   InputGroupText,
 } from "@/components/ui/input-group";
 
-import { getErrorMessage } from "@/api/errors";
+import { notify } from "@/utils/notify";
 
 type PromptDialogProps = {
   isOpen: boolean;
@@ -30,6 +30,7 @@ type PromptDialogProps = {
   suffix?: string;
   submitLabel?: string;
   validate?: (value: string) => string | null;
+  showToasts?: boolean;
 };
 
 type FormValues = { value: string };
@@ -45,6 +46,7 @@ function PromptDialog({
   suffix,
   submitLabel = "Save",
   validate,
+  showToasts = false,
 }: PromptDialogProps) {
   const inputId = useId();
 
@@ -52,7 +54,6 @@ function PromptDialog({
     register,
     handleSubmit,
     reset,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     defaultValues: { value: initialValue },
@@ -68,10 +69,10 @@ function PromptDialog({
     try {
       await onSubmit(value.trim());
       onClose();
-    } catch (error: unknown) {
-      setError("root", {
-        message: getErrorMessage(error, "Something went wrong"),
-      });
+      showToasts && notify.success("Changes saved successfully.");
+    } catch (err: unknown) {
+      showToasts &&
+        notify.error(err, "Something went wrong. Please try again.");
     }
   };
 
@@ -111,8 +112,6 @@ function PromptDialog({
 
             <FieldError errors={[errors.value]} />
           </Field>
-
-          <FieldError errors={[errors.root]} />
 
           <DialogFooter>
             <Button

@@ -51,7 +51,6 @@ export async function updatePassword(
   return data;
 }
 
-/** Imagen de avatar: del usuario indicado, o del actual si no se pasa id. */
 export async function getAvatar(userId?: number): Promise<Blob> {
   const path = userId === undefined ? "/users/me" : `/users/${userId}`;
   const { data } = await api.get<Blob>(`${path}/avatar`, {

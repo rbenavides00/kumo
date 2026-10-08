@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import { Toaster } from "@/components/ui/toast";
+
 import { AuthProvider } from "@/context/AuthContext";
 import { UserProvider } from "@/context/UserContext";
 import ProtectedRoute from "@/routes/ProtectedRoute";
@@ -34,6 +36,7 @@ function App() {
               </Route>
             </Route>
           </Routes>
+          <Toaster />
         </UserProvider>
       </AuthProvider>
     </BrowserRouter>

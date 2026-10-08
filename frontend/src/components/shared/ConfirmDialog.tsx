@@ -11,7 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { getErrorMessage } from "@/api/errors";
+import { notify } from "@/utils/notify";
 
 type ConfirmDialogProps = {
   isOpen: boolean;
@@ -21,6 +21,7 @@ type ConfirmDialogProps = {
   message: ReactNode;
   confirmLabel?: string;
   variant?: "default" | "destructive";
+  showToasts?: boolean;
 };
 
 function ConfirmDialog({
@@ -31,19 +32,20 @@ function ConfirmDialog({
   message,
   confirmLabel = "Confirm",
   variant = "default",
+  showToasts = false,
 }: ConfirmDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleConfirm = async () => {
     setIsSubmitting(true);
-    setError(null);
 
     try {
       await onConfirm();
       onClose();
+      showToasts && notify.success("Changes saved successfully.");
     } catch (err) {
-      setError(getErrorMessage(err, "Something went wrong"));
+      showToasts &&
+        notify.error(err, "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -51,7 +53,6 @@ function ConfirmDialog({
 
   const handleOpenChange = (open: boolean) => {
     if (open || isSubmitting) return;
-    setError(null);
     onClose();
   };
 
@@ -62,8 +63,6 @@ function ConfirmDialog({
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{message}</AlertDialogDescription>
         </AlertDialogHeader>
-
-        {error && <p className="text-sm text-destructive">{error}</p>}
 
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>

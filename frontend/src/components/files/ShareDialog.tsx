@@ -31,7 +31,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import * as sharesApi from "@/api/shares";
 import * as usersApi from "@/api/users";
 import { cn } from "@/lib/utils";
-import { getErrorMessage } from "@/api/errors";
+import { notify } from "@/utils/notify";
 import { getFullName } from "@/utils/user";
 
 type LoadStatus = "loading" | "ready" | "error";
@@ -178,10 +178,9 @@ function ShareDialogBody({
         sharedWith: visibility === "shared" ? sharedWith : [],
       });
       onClose();
-    } catch (error: unknown) {
-      setSaveError(
-        getErrorMessage(error, "Could not update sharing settings."),
-      );
+      notify.success("Sharing settings updated successfully.");
+    } catch (err: unknown) {
+      notify.error(err, "Could not update sharing settings.");
     } finally {
       setIsSaving(false);
     }

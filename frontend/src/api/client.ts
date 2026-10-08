@@ -14,12 +14,12 @@ api.interceptors.request.use((config) => {
 // Response: if token is invalid/expired, clean session and notify app
 api.interceptors.response.use(
   (response) => response,
-  (error: unknown) => {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
+  (err: unknown) => {
+    if (axios.isAxiosError(err) && err.response?.status === 401) {
       localStorage.removeItem("token");
       window.dispatchEvent(new Event("auth:unauthorized"));
     }
-    return Promise.reject(error);
+    return Promise.reject(err);
   },
 );
 

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 import * as usersApi from "@/api/users";
-import { getErrorMessage } from "@/api/errors";
+import { notify } from "@/utils/notify";
 
 const profileSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
@@ -36,14 +35,10 @@ function ProfileForm({
   initialLastName,
   onUpdated,
 }: ProfileFormProps) {
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
   const {
     register,
     handleSubmit,
     reset,
-    setError,
-    clearErrors,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -56,9 +51,6 @@ function ProfileForm({
   const onSubmit = async ({ firstName, lastName }: ProfileFormValues) => {
     if (!isDirty) return;
 
-    clearErrors("root");
-    setSuccessMessage(null);
-
     try {
       const updatedUser = await usersApi.updateProfile(firstName, lastName);
 
@@ -69,12 +61,9 @@ function ProfileForm({
         lastName: updatedUser.lastName ?? "",
       });
 
-      setSuccessMessage("Profile updated");
-    } catch (error: unknown) {
-      setError("root", {
-        type: "server",
-        message: getErrorMessage(error, "Could not update profile"),
-      });
+      notify.success("Profile updated successfully.");
+    } catch (err: unknown) {
+      notify.error(err, "Could not update profile.");
     }
   };
 
@@ -110,14 +99,6 @@ function ProfileForm({
             <FieldError errors={[errors.lastName]} />
           </Field>
         </FieldGroup>
-
-        <FieldError errors={[errors.root]} />
-
-        {successMessage && !isDirty && (
-          <p className="text-sm text-green-600 dark:text-green-500">
-            {successMessage}
-          </p>
-        )}
 
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Saving..." : "Save changes"}

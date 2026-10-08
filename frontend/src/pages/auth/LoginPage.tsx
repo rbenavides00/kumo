@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 
 import { useAuth } from "@/context/AuthContext";
 import usePageTitle from "@/hooks/usePageTitle";
-import { getErrorMessage } from "@/api/errors";
+import { notify } from "@/utils/notify";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -48,23 +48,16 @@ function LoginPage() {
   const {
     register,
     handleSubmit,
-    setError,
-    clearErrors,
     formState: { errors, isSubmitting },
   } = form;
 
   const onSubmit = async ({ username, password }: LoginFormValues) => {
-    clearErrors("root");
-
     try {
       // await new Promise((resolve) => setTimeout(resolve, 3000));
       await login(username, password);
       navigate("/", { replace: true });
-    } catch (error: unknown) {
-      setError("root", {
-        type: "server",
-        message: getErrorMessage(error, "Could not log in. Please try again."),
-      });
+    } catch (err: unknown) {
+      notify.error(err, "Could not log in. Please try again.");
     }
   };
 
@@ -108,8 +101,6 @@ function LoginPage() {
 
               <FieldError errors={[errors.password]} />
             </Field>
-
-            <FieldError errors={[errors.root]} />
           </FieldGroup>
         </CardContent>
 
